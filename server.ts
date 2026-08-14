@@ -55,7 +55,7 @@ async function startServer() {
       }
       let retries = 8;
       let delay = 1000;
-      let modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-pro", "gemini-3.1-pro-preview"];
+      let modelsToTry = ["gemini-2.0-flash", "gemini-2.5-pro", "gemini-3.1-pro-preview"];
       let currentModelIndex = 0;
       let response = null;
       
@@ -76,7 +76,7 @@ async function startServer() {
           retries--;
           const errorMessage = error.message || "";
           console.error(`Model API error with ${modelsToTry[currentModelIndex]} (${errorMessage})`);
-          if ((errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota")) && retries > 0) {
+          if ((errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("404") || errorMessage.includes("available")) && retries > 0) {
             console.log(`Retrying... (${retries} retries left)`);
             currentModelIndex = (currentModelIndex + 1) % modelsToTry.length;
             await new Promise(resolve => setTimeout(resolve, delay));
@@ -93,7 +93,7 @@ async function startServer() {
       res.json({ text: response.text });
     } catch (error: any) { console.error("Error in generateLessonPlan:", error.message || error);
       let errorMessage = error.message;
-      if (errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota")) {
+      if (errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("404") || errorMessage.includes("available")) {
         errorMessage = "ប្រព័ន្ធ AI អស់កូតាប្រើប្រាស់ (Quota Exceeded)។ សូមកំណត់ API Key ផ្ទាល់ខ្លួនរបស់អ្នកនៅក្នុង Settings ដើម្បីបន្តប្រើប្រាស់។";
       }
       res.status(500).json({ error: errorMessage });
@@ -150,7 +150,7 @@ ${gradeConfig} ។
 
       let retries = 8;
       let delay = 1000;
-      let modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-pro", "gemini-3.1-pro-preview"];
+      let modelsToTry = ["gemini-2.0-flash", "gemini-2.5-pro", "gemini-3.1-pro-preview"];
       let currentModelIndex = 0;
       let stream = null;
       
@@ -165,7 +165,7 @@ ${gradeConfig} ។
           retries--;
           const errorMessage = error.message || "";
           console.error(`Model API error with ${modelsToTry[currentModelIndex]} (${errorMessage})`);
-          if ((errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota")) && retries > 0) {
+          if ((errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("404") || errorMessage.includes("available")) && retries > 0) {
             console.log(`Retrying PISA generation... (${retries} retries left)`);
             currentModelIndex = (currentModelIndex + 1) % modelsToTry.length;
             await new Promise(resolve => setTimeout(resolve, delay));
@@ -200,7 +200,7 @@ ${gradeConfig} ។
     } catch (error: any) {
       console.error("Error in generatePisaTest:", error);
       let errorMessage = error.message;
-      if (errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota")) {
+      if (errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("404") || errorMessage.includes("available")) {
         errorMessage = "ប្រព័ន្ធ AI អស់កូតាប្រើប្រាស់ (Quota Exceeded)។ សូមកំណត់ API Key ផ្ទាល់ខ្លួនរបស់អ្នកនៅក្នុង Settings ដើម្បីបន្តប្រើប្រាស់។";
       }
       res.status(500).json({ error: errorMessage });
@@ -286,7 +286,7 @@ ${gradeConfig}
 
       let retries = 8;
       let delay = 1000;
-      let modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-pro", "gemini-3.1-pro-preview"];
+      let modelsToTry = ["gemini-2.0-flash", "gemini-2.5-pro", "gemini-3.1-pro-preview"];
       let currentModelIndex = 0;
       let stream = null;
       
@@ -301,7 +301,7 @@ ${gradeConfig}
           retries--;
           const errorMessage = error.message || "";
           console.error(`Model API error with ${modelsToTry[currentModelIndex]} (${errorMessage})`);
-          if ((errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota")) && retries > 0) {
+          if ((errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("404") || errorMessage.includes("available")) && retries > 0) {
             console.log(`Retrying SEA-PLM generation... (${retries} retries left)`);
             currentModelIndex = (currentModelIndex + 1) % modelsToTry.length;
             await new Promise(resolve => setTimeout(resolve, delay));
@@ -336,7 +336,7 @@ ${gradeConfig}
     } catch (error: any) {
       console.error("Error in generateSeaPlmTest:", error);
       let errorMessage = error.message;
-      if (errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota")) {
+      if (errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("404") || errorMessage.includes("available")) {
         errorMessage = "ប្រព័ន្ធ AI អស់កូតាប្រើប្រាស់ (Quota Exceeded)។ សូមកំណត់ API Key ផ្ទាល់ខ្លួនរបស់អ្នកនៅក្នុង Settings ដើម្បីបន្តប្រើប្រាស់។";
       }
       res.status(500).json({ error: errorMessage });
