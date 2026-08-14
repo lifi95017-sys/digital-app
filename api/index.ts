@@ -52,7 +52,7 @@ const app = express();
       }
       let retries = 8;
       let delay = 1000;
-      let modelsToTry = ["gemini-2.0-flash", "gemini-2.5-pro", "gemini-3.1-pro-preview"];
+      let modelsToTry = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro", "gemini-2.5-pro"];
       let currentModelIndex = 0;
       let response = null;
       
@@ -147,7 +147,7 @@ ${gradeConfig} ។
 
       let retries = 8;
       let delay = 1000;
-      let modelsToTry = ["gemini-2.0-flash", "gemini-2.5-pro", "gemini-3.1-pro-preview"];
+      let modelsToTry = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro", "gemini-2.5-pro"];
       let currentModelIndex = 0;
       let stream = null;
       
@@ -283,7 +283,7 @@ ${gradeConfig}
 
       let retries = 8;
       let delay = 1000;
-      let modelsToTry = ["gemini-2.0-flash", "gemini-2.5-pro", "gemini-3.1-pro-preview"];
+      let modelsToTry = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro", "gemini-2.5-pro"];
       let currentModelIndex = 0;
       let stream = null;
       
