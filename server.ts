@@ -55,7 +55,7 @@ async function startServer() {
       }
       let retries = 8;
       let delay = 1000;
-      let modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b"];
+      let modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro", "gemini-pro"];
       let currentModelIndex = 0;
       let response = null;
       
@@ -93,7 +93,7 @@ async function startServer() {
       res.json({ text: response.text });
     } catch (error: any) { console.error("Error in generateLessonPlan:", error.message || error);
       let errorMessage = error.message;
-      errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`;
+      if (errorMessage.includes("404") || errorMessage.includes("not found")) { errorMessage = `បញ្ហាគណនី (Account Error): API Key របស់អ្នកមិនទាន់មានសិទ្ធិប្រើប្រាស់ម៉ូដែលថ្មី (Gemini 1.5) នៅឡើយទេ។ សូមចូលទៅកាន់ aistudio.google.com ដើម្បីបង្កើត API Key ថ្មីមួយទៀត រួចយកមកបញ្ជូលក្នុង Settings ម្តងទៀត។ (Error: ${errorMessage})`; } else { errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`; }
       res.status(500).json({ error: errorMessage });
     }
   });
@@ -148,7 +148,7 @@ ${gradeConfig} ។
 
       let retries = 8;
       let delay = 1000;
-      let modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b"];
+      let modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro", "gemini-pro"];
       let currentModelIndex = 0;
       let stream = null;
       
@@ -198,7 +198,7 @@ ${gradeConfig} ។
     } catch (error: any) {
       console.error("Error in generatePisaTest:", error);
       let errorMessage = error.message;
-      errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`;
+      if (errorMessage.includes("404") || errorMessage.includes("not found")) { errorMessage = `បញ្ហាគណនី (Account Error): API Key របស់អ្នកមិនទាន់មានសិទ្ធិប្រើប្រាស់ម៉ូដែលថ្មី (Gemini 1.5) នៅឡើយទេ។ សូមចូលទៅកាន់ aistudio.google.com ដើម្បីបង្កើត API Key ថ្មីមួយទៀត រួចយកមកបញ្ជូលក្នុង Settings ម្តងទៀត។ (Error: ${errorMessage})`; } else { errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`; }
       res.status(500).json({ error: errorMessage });
     }
   });
@@ -282,7 +282,7 @@ ${gradeConfig}
 
       let retries = 8;
       let delay = 1000;
-      let modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b"];
+      let modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro", "gemini-pro"];
       let currentModelIndex = 0;
       let stream = null;
       
@@ -332,7 +332,7 @@ ${gradeConfig}
     } catch (error: any) {
       console.error("Error in generateSeaPlmTest:", error);
       let errorMessage = error.message;
-      errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`;
+      if (errorMessage.includes("404") || errorMessage.includes("not found")) { errorMessage = `បញ្ហាគណនី (Account Error): API Key របស់អ្នកមិនទាន់មានសិទ្ធិប្រើប្រាស់ម៉ូដែលថ្មី (Gemini 1.5) នៅឡើយទេ។ សូមចូលទៅកាន់ aistudio.google.com ដើម្បីបង្កើត API Key ថ្មីមួយទៀត រួចយកមកបញ្ជូលក្នុង Settings ម្តងទៀត។ (Error: ${errorMessage})`; } else { errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`; }
       res.status(500).json({ error: errorMessage });
     }
   });
