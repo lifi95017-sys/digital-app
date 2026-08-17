@@ -55,7 +55,7 @@ async function startServer() {
       }
       let retries = 8;
       let delay = 1000;
-      let modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro", "gemini-pro"];
+      let modelsToTry = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-3.0-flash", "gemini-3.1-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-pro"];
       let currentModelIndex = 0;
       let response = null;
       
@@ -148,7 +148,7 @@ ${gradeConfig} ។
 
       let retries = 8;
       let delay = 1000;
-      let modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro", "gemini-pro"];
+      let modelsToTry = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-3.0-flash", "gemini-3.1-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-pro"];
       let currentModelIndex = 0;
       let stream = null;
       
@@ -282,7 +282,7 @@ ${gradeConfig}
 
       let retries = 8;
       let delay = 1000;
-      let modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro", "gemini-pro"];
+      let modelsToTry = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-3.0-flash", "gemini-3.1-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-pro"];
       let currentModelIndex = 0;
       let stream = null;
       
