@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { User, LogIn, LogOut, BookOpen, Crown } from 'lucide-react';
+import { User, LogIn, LogOut, BookOpen, Crown, Settings } from 'lucide-react';
 import { auth } from '../lib/firebase';
 import { GoogleAuthProvider, signInWithPopup, signOut, User as FirebaseUser } from 'firebase/auth';
+import SettingsModal from './SettingsModal';
 
 export default function AppHeader({ onLogout }: { onLogout?: () => void }) {
   const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
     return auth.onAuthStateChanged((u) => setUser(u));
@@ -138,6 +140,13 @@ export default function AppHeader({ onLogout }: { onLogout?: () => void }) {
               >
                 <LogOut className="w-5 h-5" />
               </button>
+              <button
+                onClick={() => setIsSettingsOpen(true)}
+                className="text-white hover:text-emerald-300 bg-white/10 hover:bg-white/20 p-2 rounded-full transition-all"
+                title="ការកំណត់ (Settings)"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
               
               <div className="flex items-center gap-4">
                 <div className="hidden md:flex flex-col items-end justify-center gap-1.5">
@@ -180,6 +189,7 @@ export default function AppHeader({ onLogout }: { onLogout?: () => void }) {
       
       {/* Subtle Glow beneath the header */}
       <div className="absolute -bottom-px left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#FACC15]/30 to-transparent" />
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </header>
   );
 }

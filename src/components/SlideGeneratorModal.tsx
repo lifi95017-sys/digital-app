@@ -90,7 +90,7 @@ ${contentStr}
       const response = await fetch('/api/generateLessonPlan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ promptText, isJson: true })
+        body: JSON.stringify({ promptText, isJson: true, userApiKey: localStorage.getItem("userGeminiApiKey") || undefined })
       });
       
       if (!response.ok) throw new Error('Failed to generate slides outline');

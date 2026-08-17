@@ -164,11 +164,9 @@ export default function SeaPlmTestView({ onBack, files, onSaveFile, onDeleteFile
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          lesson: selectedLesson,
+        body: JSON.stringify({ lesson: selectedLesson,
           grade: activeGrade,
-          subject: activeSubject === 'math' ? 'គណិតវិទ្យា' : 'ភាសាខ្មែរ'
-        }),
+          subject: activeSubject === 'math' ? 'គណិតវិទ្យា' : 'ភាសាខ្មែរ', userApiKey: localStorage.getItem("userGeminiApiKey") || undefined }),
       });
       
       if (!response.ok) {

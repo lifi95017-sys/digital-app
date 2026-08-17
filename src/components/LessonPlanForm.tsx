@@ -204,7 +204,7 @@ export default function LessonPlanForm({ onBack }: LessonPlanFormProps) {
       const response = await fetch('/api/generateLessonPlan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ promptText, isJson: true })
+        body: JSON.stringify({ promptText, isJson: true, userApiKey: localStorage.getItem("userGeminiApiKey") || undefined })
       });
       
       if (!response.ok) {
@@ -362,7 +362,7 @@ export default function LessonPlanForm({ onBack }: LessonPlanFormProps) {
       const response = await fetch('/api/generateLessonPlan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ promptText, isJson: true })
+        body: JSON.stringify({ promptText, isJson: true, userApiKey: localStorage.getItem("userGeminiApiKey") || undefined })
       });
       
       if (!response.ok) {

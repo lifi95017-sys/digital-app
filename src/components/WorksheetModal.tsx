@@ -56,7 +56,7 @@ ${isStudent ? 'គោលបំណងសន្លឹកកិច្ចការ�
       const response = await fetch('/api/generateLessonPlan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ promptText })
+        body: JSON.stringify({ promptText, userApiKey: localStorage.getItem("userGeminiApiKey") || undefined })
       });
       
       if (!response.ok) throw new Error('Failed to generate worksheet');

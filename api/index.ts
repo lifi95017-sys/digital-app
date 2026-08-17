@@ -24,8 +24,9 @@ const app = express();
         return res.status(500).json({ error: "No valid API key provided. Please check your environment variables." });
       }
 
+      const { lesson, grade, promptText: reqPromptText, isJson, userApiKey } = req.body;
+      if (userApiKey) apiKey = userApiKey;
       const ai = new GoogleGenAI({ apiKey, httpOptions: { headers: { 'User-Agent': 'aistudio-build' } } });
-            const { lesson, grade, promptText: reqPromptText, isJson } = req.body;
 
       let finalPromptText = reqPromptText;
 
@@ -111,8 +112,9 @@ const app = express();
         return res.status(500).json({ error: "No valid API key provided." });
       }
 
+      const { lesson, grade, subject, userApiKey } = req.body;
+      if (userApiKey) apiKey = userApiKey;
       const ai = new GoogleGenAI({ apiKey, httpOptions: { headers: { 'User-Agent': 'aistudio-build' } } });
-      const { lesson, grade, subject } = req.body;
 
       if (!lesson) {
         return res.status(400).json({ error: "lesson is required" });
@@ -218,8 +220,9 @@ ${gradeConfig} ។
         return res.status(500).json({ error: "No valid API key provided." });
       }
 
+      const { lesson, grade, subject, userApiKey } = req.body;
+      if (userApiKey) apiKey = userApiKey;
       const ai = new GoogleGenAI({ apiKey, httpOptions: { headers: { 'User-Agent': 'aistudio-build' } } });
-      const { lesson, grade, subject } = req.body;
 
       if (!lesson) {
         return res.status(400).json({ error: "lesson is required" });

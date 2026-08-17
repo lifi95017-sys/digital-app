@@ -173,11 +173,9 @@ export default function PisaTestView
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          lesson: selectedLesson,
+        body: JSON.stringify({ lesson: selectedLesson,
           grade: activeGrade,
-          subject: 'វិទ្យាសាស្ត្រ'
-        }),
+          subject: 'វិទ្យាសាស្ត្រ', userApiKey: localStorage.getItem("userGeminiApiKey") || undefined }),
       });
       
       if (!response.ok) {
