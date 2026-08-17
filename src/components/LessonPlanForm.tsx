@@ -411,7 +411,7 @@ export default function LessonPlanForm({ onBack }: LessonPlanFormProps) {
     } catch (error: any) {
       console.error("AI Generation failed:", error);
       setIsGenerating(false);
-      alert(`មានបញ្ហាក្នុងការបង្កើតកិច្ចតែងការ៖ ${error.message || "AI API Error"}\n\n(បញ្ជាក់៖ គណនីឥតគិតថ្លៃប្រចាំថ្ងៃប្រហែលជាអស់កូតាហើយ។ សូមចូលទៅកាន់ Settings ដើម្បីបញ្ចូល API Key ផ្ទាល់ខ្លួនរបស់អ្នក។)`);
+      alert(`មានបញ្ហា៖ ${error.message || "AI API Error"}`);
     }
   };
 

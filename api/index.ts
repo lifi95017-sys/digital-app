@@ -20,12 +20,11 @@ const app = express();
         apiKey = process.env.VITE_GEMINI_API_KEY;
       }
       
+      const { lesson, grade, promptText: reqPromptText, isJson, userApiKey } = req.body;
+      if (userApiKey) apiKey = userApiKey;
       if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey === "AI Studio Free Tier") {
         return res.status(500).json({ error: "No valid API key provided. Please check your environment variables." });
       }
-
-      const { lesson, grade, promptText: reqPromptText, isJson, userApiKey } = req.body;
-      if (userApiKey) apiKey = userApiKey;
       const ai = new GoogleGenAI({ apiKey, httpOptions: { headers: { 'User-Agent': 'aistudio-build' } } });
 
       let finalPromptText = reqPromptText;
@@ -53,7 +52,7 @@ const app = express();
       }
       let retries = 8;
       let delay = 1000;
-      let modelsToTry = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro", "gemini-2.5-pro"];
+      let modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro"];
       let currentModelIndex = 0;
       let response = null;
       
@@ -91,9 +90,7 @@ const app = express();
       res.json({ text: response.text });
     } catch (error: any) { console.error("Error in generateLessonPlan:", error.message || error);
       let errorMessage = error.message;
-      if (errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("404") || errorMessage.includes("available")) {
-        errorMessage = "ប្រព័ន្ធ AI អស់កូតាប្រើប្រាស់ (Quota Exceeded)។ សូមកំណត់ API Key ផ្ទាល់ខ្លួនរបស់អ្នកនៅក្នុង Settings ដើម្បីបន្តប្រើប្រាស់។";
-      }
+      errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`;
       res.status(500).json({ error: errorMessage });
     }
   });
@@ -108,12 +105,11 @@ const app = express();
         apiKey = process.env.VITE_GEMINI_API_KEY;
       }
       
+      const { lesson, grade, subject, userApiKey } = req.body;
+      if (userApiKey) apiKey = userApiKey;
       if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey === "AI Studio Free Tier") {
         return res.status(500).json({ error: "No valid API key provided." });
       }
-
-      const { lesson, grade, subject, userApiKey } = req.body;
-      if (userApiKey) apiKey = userApiKey;
       const ai = new GoogleGenAI({ apiKey, httpOptions: { headers: { 'User-Agent': 'aistudio-build' } } });
 
       if (!lesson) {
@@ -149,7 +145,7 @@ ${gradeConfig} ។
 
       let retries = 8;
       let delay = 1000;
-      let modelsToTry = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro", "gemini-2.5-pro"];
+      let modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro"];
       let currentModelIndex = 0;
       let stream = null;
       
@@ -199,9 +195,7 @@ ${gradeConfig} ។
     } catch (error: any) {
       console.error("Error in generatePisaTest:", error);
       let errorMessage = error.message;
-      if (errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("404") || errorMessage.includes("available")) {
-        errorMessage = "ប្រព័ន្ធ AI អស់កូតាប្រើប្រាស់ (Quota Exceeded)។ សូមកំណត់ API Key ផ្ទាល់ខ្លួនរបស់អ្នកនៅក្នុង Settings ដើម្បីបន្តប្រើប្រាស់។";
-      }
+      errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`;
       res.status(500).json({ error: errorMessage });
     }
   });
@@ -216,12 +210,11 @@ ${gradeConfig} ។
         apiKey = process.env.VITE_GEMINI_API_KEY;
       }
       
+      const { lesson, grade, subject, userApiKey } = req.body;
+      if (userApiKey) apiKey = userApiKey;
       if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey === "AI Studio Free Tier") {
         return res.status(500).json({ error: "No valid API key provided." });
       }
-
-      const { lesson, grade, subject, userApiKey } = req.body;
-      if (userApiKey) apiKey = userApiKey;
       const ai = new GoogleGenAI({ apiKey, httpOptions: { headers: { 'User-Agent': 'aistudio-build' } } });
 
       if (!lesson) {
@@ -286,7 +279,7 @@ ${gradeConfig}
 
       let retries = 8;
       let delay = 1000;
-      let modelsToTry = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro", "gemini-2.5-pro"];
+      let modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro"];
       let currentModelIndex = 0;
       let stream = null;
       
@@ -336,9 +329,7 @@ ${gradeConfig}
     } catch (error: any) {
       console.error("Error in generateSeaPlmTest:", error);
       let errorMessage = error.message;
-      if (errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("404") || errorMessage.includes("available")) {
-        errorMessage = "ប្រព័ន្ធ AI អស់កូតាប្រើប្រាស់ (Quota Exceeded)។ សូមកំណត់ API Key ផ្ទាល់ខ្លួនរបស់អ្នកនៅក្នុង Settings ដើម្បីបន្តប្រើប្រាស់។";
-      }
+      errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`;
       res.status(500).json({ error: errorMessage });
     }
   });
