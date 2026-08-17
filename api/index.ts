@@ -73,7 +73,7 @@ const app = express();
           retries--;
           const errorMessage = error.message || "";
           console.error(`Model API error with ${modelsToTry[currentModelIndex]} (${errorMessage})`);
-          if ((errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("404") || errorMessage.includes("not found") || errorMessage.includes("available")) && currentModelIndex < modelsToTry.length - 1) {
+          if ((errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("available")) && currentModelIndex < modelsToTry.length - 1) {
             console.log(`Retrying... (${retries} retries left)`);
             currentModelIndex = (currentModelIndex + 1) % modelsToTry.length;
             await new Promise(resolve => setTimeout(resolve, delay));
@@ -90,7 +90,7 @@ const app = express();
       res.json({ text: response.text });
     } catch (error: any) { console.error("Error in generateLessonPlan:", error.message || error);
       let errorMessage = error.message;
-      if (errorMessage.includes("404") || errorMessage.includes("not found")) { errorMessage = `បញ្ហាគណនី (Account Error): API Key របស់អ្នកមិនអាចប្រើប្រាស់មុខងារនេះបានទេ ដោយសារគណនីចាស់ ឬមិនមានសិទ្ធិ។ សូមចូលទៅកាន់ aistudio.google.com (ជ្រើសរើស Create API key in a new project) ដើម្បីបង្កើត API Key ថ្មី រួចយកមកបញ្ជូលក្នុង Settings ម្តងទៀត។`; } else { errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`; }
+      if (errorMessage.includes("404") || errorMessage.includes("not found")) { errorMessage = `បញ្ហាគណនី (Account Error): API Key របស់អ្នកគ្មានសិទ្ធិ ឬស្ថិតក្នុង Project ចាស់ដែលត្រូវបិទ។ សូមបង្កើត API Key ថ្មីក្នុង "Project ថ្មី" រួច Paste បញ្ចូលក្នុង Settings ម្តងទៀត។ (Error: ${errorMessage})`; } else { errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`; }
       res.status(500).json({ error: errorMessage });
     }
   });
@@ -160,7 +160,7 @@ ${gradeConfig} ។
           retries--;
           const errorMessage = error.message || "";
           console.error(`Model API error with ${modelsToTry[currentModelIndex]} (${errorMessage})`);
-          if ((errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("404") || errorMessage.includes("not found") || errorMessage.includes("available")) && currentModelIndex < modelsToTry.length - 1) {
+          if ((errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("available")) && currentModelIndex < modelsToTry.length - 1) {
             console.log(`Retrying PISA generation... (${retries} retries left)`);
             currentModelIndex = (currentModelIndex + 1) % modelsToTry.length;
             await new Promise(resolve => setTimeout(resolve, delay));
@@ -195,7 +195,7 @@ ${gradeConfig} ។
     } catch (error: any) {
       console.error("Error in generatePisaTest:", error);
       let errorMessage = error.message;
-      if (errorMessage.includes("404") || errorMessage.includes("not found")) { errorMessage = `បញ្ហាគណនី (Account Error): API Key របស់អ្នកមិនអាចប្រើប្រាស់មុខងារនេះបានទេ ដោយសារគណនីចាស់ ឬមិនមានសិទ្ធិ។ សូមចូលទៅកាន់ aistudio.google.com (ជ្រើសរើស Create API key in a new project) ដើម្បីបង្កើត API Key ថ្មី រួចយកមកបញ្ជូលក្នុង Settings ម្តងទៀត។`; } else { errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`; }
+      if (errorMessage.includes("404") || errorMessage.includes("not found")) { errorMessage = `បញ្ហាគណនី (Account Error): API Key របស់អ្នកគ្មានសិទ្ធិ ឬស្ថិតក្នុង Project ចាស់ដែលត្រូវបិទ។ សូមបង្កើត API Key ថ្មីក្នុង "Project ថ្មី" រួច Paste បញ្ចូលក្នុង Settings ម្តងទៀត។ (Error: ${errorMessage})`; } else { errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`; }
       res.status(500).json({ error: errorMessage });
     }
   });
@@ -294,7 +294,7 @@ ${gradeConfig}
           retries--;
           const errorMessage = error.message || "";
           console.error(`Model API error with ${modelsToTry[currentModelIndex]} (${errorMessage})`);
-          if ((errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("404") || errorMessage.includes("not found") || errorMessage.includes("available")) && currentModelIndex < modelsToTry.length - 1) {
+          if ((errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("available")) && currentModelIndex < modelsToTry.length - 1) {
             console.log(`Retrying SEA-PLM generation... (${retries} retries left)`);
             currentModelIndex = (currentModelIndex + 1) % modelsToTry.length;
             await new Promise(resolve => setTimeout(resolve, delay));
@@ -329,7 +329,7 @@ ${gradeConfig}
     } catch (error: any) {
       console.error("Error in generateSeaPlmTest:", error);
       let errorMessage = error.message;
-      if (errorMessage.includes("404") || errorMessage.includes("not found")) { errorMessage = `បញ្ហាគណនី (Account Error): API Key របស់អ្នកមិនអាចប្រើប្រាស់មុខងារនេះបានទេ ដោយសារគណនីចាស់ ឬមិនមានសិទ្ធិ។ សូមចូលទៅកាន់ aistudio.google.com (ជ្រើសរើស Create API key in a new project) ដើម្បីបង្កើត API Key ថ្មី រួចយកមកបញ្ជូលក្នុង Settings ម្តងទៀត។`; } else { errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`; }
+      if (errorMessage.includes("404") || errorMessage.includes("not found")) { errorMessage = `បញ្ហាគណនី (Account Error): API Key របស់អ្នកគ្មានសិទ្ធិ ឬស្ថិតក្នុង Project ចាស់ដែលត្រូវបិទ។ សូមបង្កើត API Key ថ្មីក្នុង "Project ថ្មី" រួច Paste បញ្ចូលក្នុង Settings ម្តងទៀត។ (Error: ${errorMessage})`; } else { errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`; }
       res.status(500).json({ error: errorMessage });
     }
   });
