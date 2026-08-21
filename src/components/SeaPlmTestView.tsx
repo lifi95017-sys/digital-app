@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   ChevronLeft, Search, Plus, FileText, Trash2, Download, BookOpen, ChevronDown, ChevronRight, X, Loader2, Sparkles
 } from 'lucide-react';
-import { LibraryFile } from '../types';
+import { LibraryFile, Grade } from '../types';
 import Markdown from 'react-markdown';
 import { saveAs } from 'file-saver';
 
@@ -180,22 +180,24 @@ export default function SeaPlmTestView({ onBack, files, onSaveFile, onDeleteFile
       if (!reader) throw new Error('No reader');
       
       let fullText = '';
+      let buffer = '';
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const dataStr = line.slice(6);
+          if (line.trim().startsWith('data: ')) {
+            const dataStr = line.trim().slice(6).trim();
             if (dataStr === '[DONE]') continue;
             try {
               const parsed = JSON.parse(dataStr);
-              if (parsed.text) {
-                fullText += parsed.text;
-                setGeneratedText(fullText);
-              }
-            } catch (e) {}
+              if (parsed.error) throw new Error(parsed.error);
+              if (parsed.text) { fullText += parsed.text; setGeneratedText(fullText); }
+            } catch (e: any) {
+              console.error("Error parsing JSON chunk:", e, "Chunk:", dataStr);
+            }
           }
         }
       }
@@ -236,7 +238,9 @@ export default function SeaPlmTestView({ onBack, files, onSaveFile, onDeleteFile
     const newFile: LibraryFile = {
       id: Date.now().toString(),
       title: `តេស្ត SEA-PLM: ${selectedLesson}`,
-      type: 'document',
+      grade: activeGrade as Grade,
+      subject: activeSubject === 'khmer' ? 'ភាសាខ្មែរ' : activeSubject === 'math' ? 'គណិតវិទ្យា' : 'វិទ្យាសាស្ត្រ',
+      fileName: `SEA-PLM_test_${Date.now()}.md`,
       fileData: 'markdown:' + generatedText,
       date: new Date().toLocaleDateString('km-KH'),
     };

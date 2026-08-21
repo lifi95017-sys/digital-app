@@ -93,10 +93,42 @@ ${contentStr}
         body: JSON.stringify({ promptText, isJson: true, userApiKey: localStorage.getItem("userGeminiApiKey") || undefined })
       });
       
-      if (!response.ok) throw new Error('Failed to generate slides outline');
       
-      const data = await response.json();
-      let text = data.text || '';
+      if (!response.ok) {
+        let errStr = 'API request failed';
+        try {
+          const errData = await response.json();
+          errStr = errData.error || errStr;
+        } catch(e) {}
+        throw new Error(errStr);
+      }
+      
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      if (!reader) throw new Error('No reader available');
+      
+      let text = '';
+      let buffer = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        for (const line of lines) {
+          if (line.trim().startsWith('data: ')) {
+            const dataStr = line.trim().slice(6).trim();
+            if (dataStr === '[DONE]') continue;
+            try {
+              const parsed = JSON.parse(dataStr);
+              if (parsed.error) throw new Error(parsed.error);
+              if (parsed.text) text += parsed.text;
+            } catch (e: any) {
+              console.error("Error parsing JSON chunk:", e, "Chunk:", dataStr);
+            }
+          }
+        }
+      }
       text = text.replace(/```json/gi, '').replace(/```/g, '').trim();
       const match = text.match(/\[[\s\S]*\]/);
       if (match) {

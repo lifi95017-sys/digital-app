@@ -55,9 +55,9 @@ async function startServer() {
       }
       let retries = 8;
       let delay = 1000;
-      let modelsToTry = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-3.0-flash", "gemini-3.1-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-pro"];
+      let modelsToTry = ["gemini-3.6-flash", "gemini-3.1-flash", "gemini-3.0-flash", "gemini-2.5-flash"];
       let currentModelIndex = 0;
-      let response = null;
+      let stream = null;
       
       while (retries > 0) {
         try {
@@ -66,7 +66,7 @@ async function startServer() {
             config.responseMimeType = "application/json";
           }
           
-          response = await ai.models.generateContent({
+          stream = await ai.models.generateContentStream({
             model: modelsToTry[currentModelIndex],
             contents: finalPromptText,
             config: config
@@ -76,7 +76,7 @@ async function startServer() {
           retries--;
           const errorMessage = error.message || "";
           console.error(`Model API error with ${modelsToTry[currentModelIndex]} (${errorMessage})`);
-          if ((errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("available")) && currentModelIndex < modelsToTry.length - 1) {
+          if ((errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("404") || errorMessage.includes("not found")) && currentModelIndex < modelsToTry.length - 1) {
             console.log(`Retrying... (${retries} retries left)`);
             currentModelIndex = (currentModelIndex + 1) % modelsToTry.length;
             await new Promise(resolve => setTimeout(resolve, delay));
@@ -87,10 +87,27 @@ async function startServer() {
         }
       }
 
-      if (!response) {
+      if (!stream) {
         throw new Error("Failed to generate content after retries.");
       }
-      res.json({ text: response.text });
+      
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      
+      try {
+        for await (const chunk of stream) {
+          if (chunk.text) {
+             res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
+          }
+        }
+        res.write('data: [DONE]\n\n');
+        res.end();
+      } catch (err: any) {
+        console.error("Error streaming content:", err);
+        res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
+        res.end();
+      }
     } catch (error: any) { console.error("Error in generateLessonPlan:", error.message || error);
       let errorMessage = error.message;
       if (errorMessage.includes("404") || errorMessage.includes("not found")) { errorMessage = `បញ្ហាគណនី (Account Error): API Key របស់អ្នកគ្មានសិទ្ធិ ឬស្ថិតក្នុង Project ចាស់ដែលត្រូវបិទ។ សូមបង្កើត API Key ថ្មីក្នុង "Project ថ្មី" រួច Paste បញ្ចូលក្នុង Settings ម្តងទៀត។ (Error: ${errorMessage})`; } else { errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`; }
@@ -148,7 +165,7 @@ ${gradeConfig} ។
 
       let retries = 8;
       let delay = 1000;
-      let modelsToTry = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-3.0-flash", "gemini-3.1-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-pro"];
+      let modelsToTry = ["gemini-3.6-flash", "gemini-3.1-flash", "gemini-3.0-flash", "gemini-2.5-flash"];
       let currentModelIndex = 0;
       let stream = null;
       
@@ -163,7 +180,7 @@ ${gradeConfig} ។
           retries--;
           const errorMessage = error.message || "";
           console.error(`Model API error with ${modelsToTry[currentModelIndex]} (${errorMessage})`);
-          if ((errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("available")) && currentModelIndex < modelsToTry.length - 1) {
+          if ((errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("404") || errorMessage.includes("not found")) && currentModelIndex < modelsToTry.length - 1) {
             console.log(`Retrying PISA generation... (${retries} retries left)`);
             currentModelIndex = (currentModelIndex + 1) % modelsToTry.length;
             await new Promise(resolve => setTimeout(resolve, delay));
@@ -282,7 +299,7 @@ ${gradeConfig}
 
       let retries = 8;
       let delay = 1000;
-      let modelsToTry = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-3.0-flash", "gemini-3.1-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-pro"];
+      let modelsToTry = ["gemini-3.6-flash", "gemini-3.1-flash", "gemini-3.0-flash", "gemini-2.5-flash"];
       let currentModelIndex = 0;
       let stream = null;
       
@@ -297,7 +314,7 @@ ${gradeConfig}
           retries--;
           const errorMessage = error.message || "";
           console.error(`Model API error with ${modelsToTry[currentModelIndex]} (${errorMessage})`);
-          if ((errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("available")) && currentModelIndex < modelsToTry.length - 1) {
+          if ((errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("404") || errorMessage.includes("not found")) && currentModelIndex < modelsToTry.length - 1) {
             console.log(`Retrying SEA-PLM generation... (${retries} retries left)`);
             currentModelIndex = (currentModelIndex + 1) % modelsToTry.length;
             await new Promise(resolve => setTimeout(resolve, delay));
