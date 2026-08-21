@@ -210,9 +210,7 @@ export default function SeaPlmTestView({ onBack, files, onSaveFile, onDeleteFile
   };
 
   const handleDownloadWord = () => {
-    const textToDownload = viewingFile ? viewingFile.fileData.replace('markdown:', '') : generatedText;
-    if (!textToDownload) return;
-    
+    if (!contentRef.current) return;
     const htmlContent = `
       <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
       <head>
@@ -224,7 +222,7 @@ export default function SeaPlmTestView({ onBack, files, onSaveFile, onDeleteFile
           p { margin-bottom: 10pt; }
         </style>
       </head>
-      <body>${textToDownload.replace(/\n/g, '<br>')}</body>
+      <body>${contentRef.current.innerHTML}</body>
       </html>
     `;
     
