@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React from 'react';
 import { Student, ClassInfo } from '../types';
+import logoColor from '../assets/images/Logo MoEYS • High Quality.png';
 
 interface StudentReportMoEYSProps {
   students: Student[];
@@ -8,15 +9,6 @@ interface StudentReportMoEYSProps {
 }
 
 export default function StudentReportMoEYS({ students, classInfo, onBack }: StudentReportMoEYSProps) {
-  const [logoUrl, setLogoUrl] = useState<string>("/moeys-logo.png");
-  const logoInputRef = useRef<HTMLInputElement>(null);
-
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setLogoUrl(URL.createObjectURL(e.target.files[0]));
-    }
-  };
-
   const totalStudents = students.length || 60;
   
   const handlePrint = () => {
@@ -47,30 +39,16 @@ export default function StudentReportMoEYS({ students, classInfo, onBack }: Stud
       <div className="max-w-[297mm] mx-auto print:m-0 bg-white">
         {/* Page Header - Refined to match Image 2 */}
         <div className="grid grid-cols-3 items-start mb-10 border-none print:mb-6">
-          {/* Left Metadata (School Info) - Blue and Left Aligned */}
-          <div className="text-[#1a3a8f] text-[11px] font-['Khmer_OS_Muol_Light'] pt-4 inline-block w-fit">
-            <div 
-              className="flex justify-center mb-2 cursor-pointer" 
-              onClick={() => logoInputRef.current?.click()}
-              title="ចុចដើម្បីប្តូររូបសញ្ញា (Click to change logo)"
-            >
+          {/* Left Metadata (School Info) - Blue and Left Aligned directly Under the Logo */}
+          <div className="flex flex-col items-start gap-2 text-[#1a3a8f] text-[11px] font-['Khmer_OS_Muol_Light'] pt-2">
+            <div className="shrink-0 select-none">
               <img 
-                src={logoUrl} 
-                alt="Logo" 
-                className="w-[64px] h-[64px] object-contain pointer-events-none select-none"
-                onError={(e) => {
-                  e.currentTarget.src = "/moeys-logo.png";
-                }}
-              />
-              <input 
-                type="file" 
-                ref={logoInputRef} 
-                className="hidden" 
-                accept="image/*" 
-                onChange={handleLogoChange}
+                src={logoColor} 
+                alt="Logo ក្រសួងអប់រំ យុវជន និងកីឡា" 
+                className="w-[60px] h-[78px] object-contain pointer-events-none select-none"
               />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1 text-left">
               <p className="whitespace-nowrap flex items-center gap-1">រដ្ឋបាលស្រុក/ខណ្ឌ/ក្រុង៖ <span contentEditable suppressContentEditableWarning className="outline-none focus:bg-blue-50/50 min-w-[50px] inline-block transition-colors">ព្រៃឈរ</span></p>
               <p className="whitespace-nowrap flex items-center gap-1">សាលាបឋមសិក្សា៖ <span contentEditable suppressContentEditableWarning className="outline-none focus:bg-blue-50/50 min-w-[50px] inline-block transition-colors">ល្វា</span></p>
               <p className="whitespace-nowrap flex items-center gap-1">ថ្នាក់ទី៖ <span contentEditable suppressContentEditableWarning className="outline-none focus:bg-blue-50/50 min-w-[50px] inline-block transition-colors">៦រ (6A)</span></p>
@@ -80,23 +58,23 @@ export default function StudentReportMoEYS({ students, classInfo, onBack }: Stud
           {/* Center Titles - Kingdom Motto */}
           <div className="text-center flex flex-col items-center">
             <div className="space-y-2 mb-6 text-center flex flex-col items-center">
-              <h2 className="text-[#e2421a] text-[12px] font-['Khmer_OS_Muol_Light'] tracking-tight mt-0 mb-0 leading-normal">ព្រះរាជាណាចក្រកម្ពុជា</h2>
-              <h3 className="text-[#e2421a] text-[12px] font-['Khmer_OS_Muol_Light'] mt-0 mb-0 leading-normal">ជាតិ សាសនា ព្រះមហាក្សត្រ</h3>
+              <h2 className="text-black text-[12pt] font-['Khmer_OS_Muol_Light'] tracking-tight mt-0 mb-0 leading-normal">ព្រះរាជាណាចក្រកម្ពុជា</h2>
+              <h3 className="text-black text-[12pt] font-['Khmer_OS_Muol_Light'] mt-0 mb-0 leading-normal">ជាតិ សាសនា ព្រះមហាក្សត្រ</h3>
               <div className="flex justify-center mt-1">
                 <svg width="80" height="12" viewBox="0 0 80 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M0 6H30" stroke="#e2421a" strokeWidth="0.8"/>
-                  <path d="M50 6H80" stroke="#e2421a" strokeWidth="0.8"/>
-                  <circle cx="40" cy="6" r="3" stroke="#e2421a" strokeWidth="0.8"/>
-                  <circle cx="40" cy="6" r="1.5" fill="#e2421a"/>
-                  <path d="M34 6L36 4V8L34 6Z" fill="#e2421a"/>
-                  <path d="M46 6L44 4V8L46 6Z" fill="#e2421a"/>
+                  <path d="M0 6H30" stroke="#000000" strokeWidth="0.8"/>
+                  <path d="M50 6H80" stroke="#000000" strokeWidth="0.8"/>
+                  <circle cx="40" cy="6" r="3" stroke="#000000" strokeWidth="0.8"/>
+                  <circle cx="40" cy="6" r="1.5" fill="#000000"/>
+                  <path d="M34 6L36 4V8L34 6Z" fill="#000000"/>
+                  <path d="M46 6L44 4V8L46 6Z" fill="#000000"/>
                 </svg>
               </div>
             </div>
             
             <div className="space-y-1">
-              <h1 className="text-[#cc0000] text-[11px] font-['Khmer_OS_Muol_Light'] font-bold leading-tight">បញ្ជីឈ្មោះសិស្ស</h1>
-              <p className="text-[#cc0000] text-[12px] font-bold font-['Khmer_OS_Siemreap']">ឆ្នាំសិក្សា <span contentEditable suppressContentEditableWarning className="outline-none focus:bg-red-50/50 min-w-[60px] inline-block transition-colors">២០២៤-២០២៥</span></p>
+              <h1 className="text-[#cc0000] text-[11pt] font-['Khmer_OS_Muol_Light'] font-bold leading-tight">បញ្ជីឈ្មោះសិស្ស</h1>
+              <p className="text-[#cc0000] text-[11pt] font-bold font-['Khmer_OS_Siemreap']">ឆ្នាំសិក្សា <span contentEditable suppressContentEditableWarning className="outline-none focus:bg-red-50/50 min-w-[60px] inline-block transition-colors">២០២៤-២០២៥</span></p>
             </div>
           </div>
 

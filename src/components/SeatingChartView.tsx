@@ -15,11 +15,17 @@ import {
   RefreshCcw,
   CheckCircle2,
   Download,
-  Printer
+  Printer,
+  Camera,
+  Upload,
+  Image as ImageIcon,
+  Sparkles,
+  Check,
+  ZoomIn
 } from 'lucide-react';
 import { Student, SeatingChart } from '../types';
 import { db } from '../lib/firebase';
-import { collection, onSnapshot, setDoc, doc, deleteDoc, query, orderBy } from '../lib/firebase';
+import { collection, onSnapshot, setDoc, doc, deleteDoc, query, orderBy, updateDoc } from '../lib/firebase';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
@@ -37,6 +43,10 @@ export default function SeatingChartView({ onBack, students }: SeatingChartViewP
   const [chartName, setChartName] = useState('ប្លង់ថ្នាក់រៀនធម្មតា');
   const [seating, setSeating] = useState<Record<string, string>>({}); // "row-col" -> studentId
   const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [photoViewMode, setPhotoViewMode] = useState<'normal' | 'large'>('large');
+  const [uploadingStudentId, setUploadingStudentId] = useState<string | null>(null);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [swapSeat, setSwapSeat] = useState<string | null>(null);
   const [savedCharts, setSavedCharts] = useState<SeatingChart[]>([]);
   const [activeChartId, setActiveChartId] = useState<string | null>(null);
@@ -44,6 +54,7 @@ export default function SeatingChartView({ onBack, students }: SeatingChartViewP
   const [isExporting, setIsExporting] = useState(false);
 
   const chartRef = React.useRef<HTMLDivElement>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const colors = {
     blue: 'bg-blue-50 border-blue-200 text-blue-700',
@@ -63,10 +74,45 @@ export default function SeatingChartView({ onBack, students }: SeatingChartViewP
     return unsub;
   }, []);
 
+  const handleUploadStudentPhoto = async (studentId: string, file: File) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result as string;
+      try {
+        await updateDoc(doc(db, 'students', studentId), { photoUrl: base64String });
+        const targetStudent = students.find(s => s.id === studentId);
+        setUploadStatus(`បានបញ្ចូលរូបភាពសិស្ស "${targetStudent?.name || ''}" ជោគជ័យ!`);
+        setTimeout(() => setUploadStatus(null), 3500);
+      } catch (err) {
+        console.error('Failed to update student photo in firebase', err);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const triggerPhotoUpload = (studentId: string) => {
+    setUploadingStudentId(studentId);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && uploadingStudentId) {
+      handleUploadStudentPhoto(uploadingStudentId, file);
+      setUploadingStudentId(null);
+    }
+  };
+
   const handleLayoutChange = (type: LayoutType) => {
     setLayoutType(type);
     setSeating({}); // Clear current seating when switching layout
     setActiveChartId(null);
+    setSelectedSeat(null);
+    setSelectedStudentId(null);
     if (type === 'traditional') {
       setRows(5);
       setCols(6);
@@ -80,6 +126,22 @@ export default function SeatingChartView({ onBack, students }: SeatingChartViewP
       setCols(6);
       setChartName('ប្លង់តុអង្គុយប្រឡង (Exam Hall)');
     }
+  };
+
+  const assignStudent = (studentId: string, targetSeat?: string) => {
+    const seatId = targetSeat || selectedSeat;
+    if (!seatId) return;
+    
+    const newSeating = { ...seating };
+    // Remove if already seated elsewhere
+    Object.keys(newSeating).forEach(key => {
+      if (newSeating[key] === studentId) delete newSeating[key];
+    });
+
+    newSeating[seatId] = studentId;
+    setSeating(newSeating);
+    setSelectedSeat(null);
+    setSelectedStudentId(null);
   };
 
   const handleSeatClick = (seatId: string) => {
@@ -100,21 +162,17 @@ export default function SeatingChartView({ onBack, students }: SeatingChartViewP
       return;
     }
 
-    setSelectedSeat(seatId);
-  };
+    // If a student is currently selected from the list, place them here directly!
+    if (selectedStudentId) {
+      assignStudent(selectedStudentId, seatId);
+      return;
+    }
 
-  const assignStudent = (studentId: string) => {
-    if (!selectedSeat) return;
-    
-    const newSeating = { ...seating };
-    // Remove if already seated
-    Object.keys(newSeating).forEach(key => {
-      if (newSeating[key] === studentId) delete newSeating[key];
-    });
-
-    newSeating[selectedSeat] = studentId;
-    setSeating(newSeating);
-    setSelectedSeat(null);
+    if (selectedSeat === seatId) {
+      setSelectedSeat(null);
+    } else {
+      setSelectedSeat(seatId);
+    }
   };
 
   const handleShuffle = () => {
@@ -206,6 +264,26 @@ export default function SeatingChartView({ onBack, students }: SeatingChartViewP
     }
   };
 
+  const handleDownloadPng = async () => {
+    if (!chartRef.current) return;
+    setIsExporting(true);
+    try {
+      const canvas = await html2canvas(chartRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#0f172a',
+      });
+      const link = document.createElement('a');
+      link.download = `${chartName || 'seating-chart'}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (error) {
+      console.error('PNG Export failed:', error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const setExamLayout = () => {
     setChartName('ប្លង់តុអង្គុយប្រឡង');
     setRows(6);
@@ -231,32 +309,50 @@ export default function SeatingChartView({ onBack, students }: SeatingChartViewP
           </div>
         </div>
 
-        <div className="flex items-center gap-3 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
+        <div className="flex flex-wrap items-center gap-3 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
            <input 
             type="text" 
             value={chartName} 
             onChange={e => setChartName(e.target.value)}
             placeholder="ឈ្មោះប្លង់ថ្នាក់..."
-            className="bg-slate-50 border-none px-4 py-3 rounded-xl font-black khmer-font text-xs outline-none focus:ring-2 focus:ring-indigo-100 w-48 md:w-64 transition-all"
+            className="bg-slate-50 border-none px-4 py-3 rounded-xl font-black khmer-font text-xs outline-none focus:ring-2 focus:ring-indigo-100 w-44 md:w-56 transition-all"
            />
            <button 
             onClick={handleSave}
             disabled={isSaving}
-            className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-black khmer-font text-xs flex items-center gap-2 shadow-lg shadow-emerald-100 hover:bg-emerald-700 disabled:opacity-50 transition-all"
+            className="bg-emerald-600 text-white px-5 py-3 rounded-xl font-black khmer-font text-xs flex items-center gap-2 shadow-lg shadow-emerald-100 hover:bg-emerald-700 disabled:opacity-50 transition-all"
            >
               {isSaving ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} 
               រក្សាទុក
            </button>
            <button 
+            onClick={handleDownloadPng}
+            disabled={isExporting}
+            className="bg-sky-600 text-white px-5 py-3 rounded-xl font-black khmer-font text-xs flex items-center gap-2 shadow-lg shadow-sky-100 hover:bg-sky-700 disabled:opacity-50 transition-all"
+            title="ទាញយករូបភាពប្លង់តុជា PNG"
+           >
+              {isExporting ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />} 
+              រូបភាព PNG
+           </button>
+           <button 
             onClick={handleDownload}
             disabled={isExporting}
-            className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-black khmer-font text-xs flex items-center gap-2 shadow-lg shadow-indigo-100 hover:bg-indigo-700 disabled:opacity-50 transition-all"
+            className="bg-indigo-600 text-white px-5 py-3 rounded-xl font-black khmer-font text-xs flex items-center gap-2 shadow-lg shadow-indigo-100 hover:bg-indigo-700 disabled:opacity-50 transition-all"
            >
               {isExporting ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} 
               ទាញយក PDF
            </button>
         </div>
       </div>
+
+      {/* Hidden file input for uploading student photo */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        accept="image/*" 
+        className="hidden" 
+        onChange={handleFileInputChange} 
+      />
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
         {/* Controls Sidebar */}
@@ -269,19 +365,19 @@ export default function SeatingChartView({ onBack, students }: SeatingChartViewP
                  <div className="flex flex-col gap-2">
                     <button 
                       onClick={() => handleLayoutChange('traditional')} 
-                      className={`text-left px-4 py-3 rounded-xl font-bold khmer-font text-xs transition-all border ${layoutType === 'traditional' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 border-transparent hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100'}`}
+                      className={`text-left px-4 py-3 rounded-xl font-bold khmer-font text-xs transition-all border ${layoutType === 'traditional' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-slate-50 border-transparent hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100'}`}
                     >
                       🏫 ប្លង់រៀបតាមជួរ (Traditional)
                     </button>
                     <button 
                       onClick={() => handleLayoutChange('groups')} 
-                      className={`text-left px-4 py-3 rounded-xl font-bold khmer-font text-xs transition-all border ${layoutType === 'groups' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 border-transparent hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100'}`}
+                      className={`text-left px-4 py-3 rounded-xl font-bold khmer-font text-xs transition-all border ${layoutType === 'groups' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-slate-50 border-transparent hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100'}`}
                     >
                       👥 ប្លង់រៀបជាក្រុម (Group Pods)
                     </button>
                     <button 
                       onClick={() => handleLayoutChange('exam')} 
-                      className={`text-left px-4 py-3 rounded-xl font-bold khmer-font text-xs transition-all border ${layoutType === 'exam' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 border-transparent hover:bg-slate-100/50 hover:text-rose-600 hover:border-rose-100'}`}
+                      className={`text-left px-4 py-3 rounded-xl font-bold khmer-font text-xs transition-all border ${layoutType === 'exam' ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-slate-50 border-transparent hover:bg-slate-100/50 hover:text-rose-600 hover:border-rose-100'}`}
                     >
                       📝 ប្លង់តុអង្គុយប្រឡង (Exam Hall)
                     </button>
@@ -324,35 +420,135 @@ export default function SeatingChartView({ onBack, students }: SeatingChartViewP
               </div>
            </div>
 
-           <div className="bg-white p-8 rounded-[3rem] shadow-xl border border-slate-100 space-y-4">
+           <div className="bg-white p-6 rounded-[3rem] shadow-xl border border-slate-100 space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-black text-slate-800 khmer-font uppercase flex items-center gap-2">
                    <Users className="w-4 h-4 text-emerald-600" /> បញ្ជីសិស្ស ({students.length})
                 </h3>
+                <span className="text-[10px] font-bold text-slate-400 khmer-font">
+                   អង្គុយ {Object.keys(seating).length} នាក់
+                </span>
               </div>
-              <div className="max-h-[400px] overflow-y-auto pr-2 space-y-2 no-scrollbar">
+
+              {uploadStatus && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-[11px] font-bold text-emerald-700 khmer-font text-center shadow-sm">
+                  {uploadStatus}
+                </div>
+              )}
+
+              {selectedStudentId && (
+                <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-2xl flex items-center justify-between text-[11px] font-bold text-indigo-700 khmer-font shadow-sm animate-pulse">
+                  <div className="truncate">
+                    👉 ចុចលើតុណាមួយ ឬអូសទម្លាក់
+                  </div>
+                  <button 
+                    onClick={() => setSelectedStudentId(null)}
+                    className="text-[10px] text-slate-400 hover:text-slate-600 underline ml-2 shrink-0"
+                  >
+                    បោះបង់
+                  </button>
+                </div>
+              )}
+
+              <div className="text-[10px] text-slate-400 font-bold khmer-font bg-slate-50 p-2.5 rounded-xl border border-dashed border-slate-200">
+                💡 <b>របៀបប្រើ៖</b> ចុចលើសិស្ស រួចចុចលើតុ ឬអូស (Drag) សិស្សទម្លាក់លើតុ។ ចុចរូបកាមេរ៉ា 📷 ដើម្បីដាក់រូបថតសិស្ស។
+              </div>
+
+              <div className="max-h-[420px] overflow-y-auto pr-2 space-y-2 no-scrollbar">
                  {students.map(s => {
                    const isSeated = Object.values(seating).includes(s.id);
-                   const isSelecting = selectedSeat && !isSeated;
+                   const isSelected = selectedStudentId === s.id;
+                   const isTargetingForSelectedSeat = selectedSeat && !isSeated;
+
                    return (
-                     <button
+                     <div
                        key={s.id}
-                       onClick={() => assignStudent(s.id)}
-                       disabled={!selectedSeat || isSeated}
-                       className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center gap-3 text-left group ${
-                         isSeated ? 'bg-slate-50 border-slate-100 text-slate-300 opacity-40 grayscale' : 
-                         isSelecting ? 'border-indigo-200 bg-indigo-50/50 text-slate-700 shadow-md scale-105' : 'border-slate-50 bg-white text-slate-500 hover:border-slate-200'
+                       draggable={true}
+                       onDragStart={(e) => {
+                         e.dataTransfer.setData('text/student-id', s.id);
+                         e.dataTransfer.setData('text/plain', s.id);
+                       }}
+                       onClick={() => {
+                         if (selectedSeat) {
+                           assignStudent(s.id);
+                         } else {
+                           setSelectedStudentId(selectedStudentId === s.id ? null : s.id);
+                         }
+                       }}
+                       className={`w-full p-3 rounded-2xl border-2 transition-all flex items-center gap-3 text-left group cursor-pointer ${
+                         isSeated ? 'bg-slate-50/80 border-slate-100 text-slate-400' : 
+                         isSelected ? 'border-indigo-600 bg-indigo-50/80 text-indigo-950 shadow-md ring-2 ring-indigo-200 scale-[1.02]' :
+                         isTargetingForSelectedSeat ? 'border-emerald-300 bg-emerald-50/50 text-slate-700 hover:scale-[1.02] shadow-sm' : 
+                         'border-slate-100 bg-white text-slate-600 hover:border-slate-300 shadow-sm'
                        }`}
                      >
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-sm ${isSeated ? 'bg-slate-100' : 'bg-indigo-50'}`}>
-                          {s.gender === 'male' || s.gender === 'ប្រុស' ? '👦' : '👧'}
+                        {/* Student Avatar / Photo */}
+                        <div className="relative w-11 h-11 rounded-xl overflow-hidden shadow-sm shrink-0 border border-slate-200 group/avatar">
+                          {s.photoUrl ? (
+                            <img 
+                              src={s.photoUrl} 
+                              alt={s.name} 
+                              className="w-full h-full object-cover rounded-xl"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-indigo-50 flex items-center justify-center text-xl">
+                              {s.gender === 'male' || s.gender === 'ប្រុស' ? '👦' : '👧'}
+                            </div>
+                          )}
+                          {/* Quick Photo Upload Button */}
+                          <button
+                            type="button"
+                            title="ដាក់រូបភាព / ប្តូររូបថតសិស្ស"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              triggerPhotoUpload(s.id);
+                            }}
+                            className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity"
+                          >
+                            <Camera className="w-4 h-4 drop-shadow" />
+                          </button>
                         </div>
+
+                        {/* Name & ID */}
                         <div className="flex-1 min-w-0">
-                          <p className="text-[11px] font-black khmer-font truncate">{s.name}</p>
-                          <p className="text-[8px] font-bold uppercase text-slate-400">Student ID: {s.id.slice(-4)}</p>
+                          <p className="text-[12px] font-black khmer-font truncate text-slate-800">{s.name}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[8px] font-bold uppercase text-slate-400">ID: {s.id.slice(-4)}</span>
+                            {s.photoUrl && (
+                              <span className="text-[8px] bg-emerald-100 text-emerald-700 px-1.5 py-0.2 rounded font-bold">
+                                មានរូប
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        {isSeated ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : isSelecting && <UserPlus className="w-4 h-4 text-indigo-500 animate-bounce" />}
-                     </button>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            title="ដាក់រូបភាពសិស្សនេះ"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              triggerPhotoUpload(s.id);
+                            }}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                          >
+                            <Camera className="w-4 h-4" />
+                          </button>
+                          {isSeated ? (
+                            <span title="បានរៀបតុរួចរាល់" className="p-1 text-emerald-500">
+                              <CheckCircle2 className="w-4 h-4" />
+                            </span>
+                          ) : isSelected ? (
+                            <span className="p-1 bg-indigo-600 text-white rounded-lg text-[9px] font-bold">
+                              ជ្រើស
+                            </span>
+                          ) : isTargetingForSelectedSeat && (
+                            <UserPlus className="w-4 h-4 text-emerald-600 animate-bounce" />
+                          )}
+                        </div>
+                     </div>
                    );
                  })}
               </div>
@@ -361,9 +557,79 @@ export default function SeatingChartView({ onBack, students }: SeatingChartViewP
 
         {/* Classroom Grid */}
         <div className="xl:col-span-9 space-y-6">
+           {/* Top Status & View Bar */}
+           <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black text-slate-700 khmer-font flex items-center gap-2">
+                  <LayoutGrid className="w-4 h-4 text-indigo-600" />
+                  ទម្រង់បង្ហាញរូបថតសិស្សលើតុ៖
+                </span>
+                <div className="flex items-center bg-slate-100 p-1 rounded-xl">
+                  <button
+                    onClick={() => setPhotoViewMode('large')}
+                    className={`px-3 py-1 rounded-lg text-xs font-black khmer-font transition-all flex items-center gap-1.5 ${
+                      photoViewMode === 'large' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    <ZoomIn className="w-3.5 h-3.5" /> រូបថតធំច្បាស់ (Large)
+                  </button>
+                  <button
+                    onClick={() => setPhotoViewMode('normal')}
+                    className={`px-3 py-1 rounded-lg text-xs font-black khmer-font transition-all flex items-center gap-1.5 ${
+                      photoViewMode === 'normal' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    ទំហំធម្មតា (Standard)
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-bold text-slate-500 khmer-font">
+                  តុសរុប៖ <b className="text-indigo-600 font-mono">{rows * cols}</b> | 
+                  សិស្សមានតុ៖ <b className="text-emerald-600 font-mono">{Object.keys(seating).length}</b>
+                </span>
+              </div>
+           </div>
+
+           {/* User selection hint banner */}
+           {selectedStudentId && (
+             <div className="bg-indigo-600 text-white px-6 py-3 rounded-2xl shadow-xl flex items-center justify-between text-xs font-bold khmer-font animate-pulse">
+                <div className="flex items-center gap-2">
+                   <Sparkles className="w-4 h-4" />
+                   <span>
+                     កំពុងជ្រើសសិស្ស <b>{students.find(s => s.id === selectedStudentId)?.name}</b> — សូមចុចលើតុណាមួយដើម្បីដាក់ចូលតុនោះ!
+                   </span>
+                </div>
+                <button 
+                  onClick={() => setSelectedStudentId(null)}
+                  className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-xl text-[11px]"
+                >
+                  បោះបង់
+                </button>
+             </div>
+           )}
+
+           {selectedSeat && !selectedStudentId && (
+             <div className="bg-emerald-600 text-white px-6 py-3 rounded-2xl shadow-xl flex items-center justify-between text-xs font-bold khmer-font animate-pulse">
+                <div className="flex items-center gap-2">
+                   <CheckCircle2 className="w-4 h-4" />
+                   <span>
+                     បានជ្រើសតុ <b>{selectedSeat}</b> — សូមចុចលើសិស្សក្នុងបញ្ជីខាងឆ្វេងដើម្បីដាក់សិស្សចូលតុនេះ!
+                   </span>
+                </div>
+                <button 
+                  onClick={() => setSelectedSeat(null)}
+                  className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-xl text-[11px]"
+                >
+                  បោះបង់
+                </button>
+             </div>
+           )}
+
            <div 
              ref={chartRef}
-             className="bg-slate-900 p-12 md:p-20 rounded-[5rem] shadow-2xl relative overflow-hidden ring-8 ring-slate-800/50"
+             className="bg-slate-900 p-8 md:p-16 rounded-[4rem] shadow-2xl relative overflow-hidden ring-8 ring-slate-800/50"
            >
               {/* Classroom Decoration */}
               <div className="absolute top-8 left-8 w-16 h-1 bg-slate-700/50 rounded-full" />
@@ -401,10 +667,10 @@ export default function SeatingChartView({ onBack, students }: SeatingChartViewP
                 {/* Traditional Layout */}
                 {layoutType === 'traditional' && (
                   <div 
-                    className="grid gap-4 md:gap-8 mx-auto" 
+                    className="grid gap-3 md:gap-6 mx-auto" 
                     style={{ 
                       gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-                      maxWidth: `${cols * 120}px`
+                      maxWidth: photoViewMode === 'large' ? `${cols * 140}px` : `${cols * 115}px`
                     }}
                   >
                     {Array.from({ length: rows }).map((_, r) => (
@@ -433,6 +699,17 @@ export default function SeatingChartView({ onBack, students }: SeatingChartViewP
                               onClick={() => handleSeatClick(seatId)}
                               label={seatLabel}
                               color={colorClass}
+                              isLargeMode={photoViewMode === 'large'}
+                              onUploadPhoto={triggerPhotoUpload}
+                              onDropStudent={(sId) => assignStudent(sId, seatId)}
+                              onDropPhotoFile={(file) => {
+                                if (student) {
+                                  handleUploadStudentPhoto(student.id, file);
+                                } else if (selectedStudentId) {
+                                  handleUploadStudentPhoto(selectedStudentId, file);
+                                  assignStudent(selectedStudentId, seatId);
+                                }
+                              }}
                               onRemove={() => {
                                 const newSeating = { ...seating };
                                 delete newSeating[seatId];
@@ -461,7 +738,7 @@ export default function SeatingChartView({ onBack, students }: SeatingChartViewP
 
                 {/* Exam Hall Layout */}
                 {layoutType === 'exam' && (
-                  <div className="space-y-12 w-full max-w-4xl">
+                  <div className="space-y-12 w-full max-w-5xl">
                      {/* Invigilator Desk at Front Center */}
                      <div className="flex flex-col items-center gap-4 mb-16">
                         <div className="w-32 h-16 bg-slate-800 border-2 border-indigo-500/50 rounded-xl flex items-center justify-center shadow-2xl relative">
@@ -471,10 +748,10 @@ export default function SeatingChartView({ onBack, students }: SeatingChartViewP
                      </div>
 
                      <div 
-                       className="grid gap-x-16 gap-y-10 mx-auto" 
+                       className="grid gap-x-10 md:gap-x-14 gap-y-8 md:gap-y-10 mx-auto" 
                        style={{ 
                          gridTemplateColumns: `repeat(6, minmax(0, 1fr))`,
-                         maxWidth: '900px'
+                         maxWidth: photoViewMode === 'large' ? '1080px' : '900px'
                        }}
                      >
                         {Array.from({ length: rows }).map((_, r) => (
@@ -502,6 +779,17 @@ export default function SeatingChartView({ onBack, students }: SeatingChartViewP
                                     onClick={() => handleSeatClick(seatId)}
                                     label={seatLabel}
                                     color={colorClass}
+                                    isLargeMode={photoViewMode === 'large'}
+                                    onUploadPhoto={triggerPhotoUpload}
+                                    onDropStudent={(sId) => assignStudent(sId, seatId)}
+                                    onDropPhotoFile={(file) => {
+                                      if (student) {
+                                        handleUploadStudentPhoto(student.id, file);
+                                      } else if (selectedStudentId) {
+                                        handleUploadStudentPhoto(selectedStudentId, file);
+                                        assignStudent(selectedStudentId, seatId);
+                                      }
+                                    }}
                                     onRemove={() => {
                                       const newSeating = { ...seating };
                                       delete newSeating[seatId];
@@ -509,7 +797,7 @@ export default function SeatingChartView({ onBack, students }: SeatingChartViewP
                                     }}
                                   />
                                 </div>
-                                {isAisleSplit && <div className="w-16" />}
+                                {isAisleSplit && <div className="w-8 md:w-16" />}
                               </React.Fragment>
                             );
                           })
@@ -558,15 +846,15 @@ export default function SeatingChartView({ onBack, students }: SeatingChartViewP
 
                 {/* Groups Layout */}
                 {layoutType === 'groups' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 md:gap-16">
                     {Array.from({ length: 6 }).map((_, gIndex) => {
                       const groupLetter = String.fromCharCode(65 + gIndex);
                       const colorClass = layoutColors[gIndex % layoutColors.length];
                       
                       return (
                         <div key={gIndex} className="space-y-4">
-                          <h4 className={`text-center font-black rounded-lg py-1 ${colors[colorClass as keyof typeof colors]}`}>ក្រុម {groupLetter}</h4>
-                          <div className="grid grid-cols-2 gap-4 p-4 rounded-3xl bg-slate-800/20 border border-slate-700">
+                          <h4 className={`text-center font-black rounded-xl py-1.5 shadow-sm ${colors[colorClass as keyof typeof colors]}`}>ក្រុម {groupLetter}</h4>
+                          <div className="grid grid-cols-2 gap-4 p-4 rounded-3xl bg-slate-800/40 border border-slate-700">
                             {[1, 2, 3, 4].map(sIndex => {
                                const seatId = `group-${gIndex}-seat-${sIndex}`;
                                const studentId = seating[seatId];
@@ -582,6 +870,17 @@ export default function SeatingChartView({ onBack, students }: SeatingChartViewP
                                    onClick={() => handleSeatClick(seatId)}
                                    label={`${groupLetter}${sIndex}`}
                                    color={colorClass}
+                                   isLargeMode={photoViewMode === 'large'}
+                                   onUploadPhoto={triggerPhotoUpload}
+                                   onDropStudent={(sId) => assignStudent(sId, seatId)}
+                                   onDropPhotoFile={(file) => {
+                                     if (student) {
+                                       handleUploadStudentPhoto(student.id, file);
+                                     } else if (selectedStudentId) {
+                                       handleUploadStudentPhoto(selectedStudentId, file);
+                                       assignStudent(selectedStudentId, seatId);
+                                     }
+                                   }}
                                    onRemove={() => {
                                      const newSeating = { ...seating };
                                      delete newSeating[seatId];
@@ -685,7 +984,11 @@ function Seat({
   onClick, 
   label, 
   color, 
-  onRemove 
+  onRemove,
+  isLargeMode,
+  onUploadPhoto,
+  onDropStudent,
+  onDropPhotoFile
 }: { 
   student?: Student, 
   studentRank?: string | number,
@@ -694,8 +997,14 @@ function Seat({
   onClick: () => void, 
   label: string, 
   color: string,
-  onRemove: () => void
+  onRemove: () => void,
+  isLargeMode?: boolean,
+  onUploadPhoto: (studentId: string) => void,
+  onDropStudent: (studentId: string) => void,
+  onDropPhotoFile: (file: File) => void
 }) {
+  const [isDragOver, setIsDragOver] = useState(false);
+
   const colors = {
     blue: 'bg-blue-50 border-blue-200 text-blue-700',
     teal: 'bg-teal-50 border-teal-200 text-teal-700',
@@ -707,57 +1016,145 @@ function Seat({
 
   const currentColors = colors[color as keyof typeof colors] || colors.blue;
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+
+    // Check if dragging image file directly
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith('image/')) {
+        onDropPhotoFile(file);
+        return;
+      }
+    }
+
+    // Check if dragging student from list
+    const studentId = e.dataTransfer.getData('text/student-id') || e.dataTransfer.getData('text/plain');
+    if (studentId) {
+      onDropStudent(studentId);
+    }
+  };
+
   return (
     <motion.div
       layout
       initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={{ scale: 1.04 }}
+      whileTap={{ scale: 0.97 }}
       onClick={onClick}
-      className={`relative group aspect-square w-24 h-24 rounded-[1.5rem] border-2 transition-all flex flex-col items-center justify-center text-center cursor-pointer ${
-        student ? `bg-white border-white shadow-lg translate-y-[-4px]` : 
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      className={`relative group rounded-3xl border-2 transition-all flex flex-col items-center justify-center text-center cursor-pointer select-none p-2 ${
+        isLargeMode ? 'w-28 h-32 md:w-32 md:h-36' : 'w-24 h-28 md:w-28 md:h-32'
+      } ${
+        isDragOver ? 'bg-indigo-600/30 border-indigo-400 ring-4 ring-indigo-400/50 scale-105' :
+        student ? 'bg-white border-white shadow-xl translate-y-[-2px]' : 
         isSwapSource ? 'bg-amber-500/20 border-amber-500 animate-pulse' :
-        isSelected ? 'bg-indigo-500/20 border-indigo-500 border-dashed animate-pulse' : 
-        'bg-slate-800/40 border-slate-700 hover:bg-slate-700/60'
+        isSelected ? 'bg-indigo-500/30 border-indigo-400 border-dashed animate-pulse ring-4 ring-indigo-500/20' : 
+        'bg-slate-800/50 border-slate-700 hover:bg-slate-800/80 hover:border-slate-500'
       }`}
     >
+      {/* Desk label badge */}
+      <div className="absolute top-1.5 left-2 px-1.5 py-0.5 rounded-md bg-slate-900/10 text-[9px] font-black uppercase text-slate-500">
+        {label}
+      </div>
+
       {student ? (
         <>
-          <div className="relative w-12 h-12 mb-1">
+          {/* Photo container */}
+          <div className={`relative mb-1 group/photo ${
+            isLargeMode ? 'w-14 h-14 md:w-16 md:h-16' : 'w-11 h-11 md:w-12 md:h-12'
+          }`}>
             {student.photoUrl ? (
               <img 
                 src={student.photoUrl} 
                 alt={student.name} 
-                className="w-full h-full object-cover rounded-full border-2 border-indigo-100"
+                className="w-full h-full object-cover rounded-2xl border-2 border-indigo-100 shadow-sm"
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <div className="w-full h-full rounded-full bg-indigo-50 flex items-center justify-center border-2 border-indigo-100">
-                <span className="text-2xl">{student.gender === 'male' || student.gender === 'ប្រុស' ? '👦' : '👧'}</span>
+              <div 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUploadPhoto(student.id);
+                }}
+                className="w-full h-full rounded-2xl bg-indigo-50 flex flex-col items-center justify-center border-2 border-dashed border-indigo-300 hover:border-indigo-500 hover:bg-indigo-100 transition-colors cursor-pointer"
+                title="ចុចដើម្បីដាក់រូបភាពសិស្សនេះ"
+              >
+                <span className="text-xl leading-none">
+                  {student.gender === 'male' || student.gender === 'ប្រុស' ? '👦' : '👧'}
+                </span>
+                <span className="text-[7px] font-black text-indigo-600 khmer-font mt-0.5">ដាក់រូប</span>
               </div>
             )}
-            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center text-[8px] text-white font-black">
+
+            {/* Quick Upload / Replace Photo Overlay */}
+            <button
+              type="button"
+              title="ដាក់រូបភាព / ប្តូររូបថតសិស្ស"
+              onClick={(e) => {
+                e.stopPropagation();
+                onUploadPhoto(student.id);
+              }}
+              className="absolute inset-0 bg-black/60 text-white rounded-2xl flex flex-col items-center justify-center opacity-0 group-hover/photo:opacity-100 transition-opacity"
+            >
+              <Camera className="w-4 h-4 drop-shadow" />
+              <span className="text-[7px] font-bold uppercase mt-0.5">ប្តូររូប</span>
+            </button>
+
+            {/* Rank / Roll number */}
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center text-[8px] text-white font-black shadow-sm">
               {studentRank}
             </div>
           </div>
-          <p className="text-[9px] font-black khmer-font text-slate-800 truncate px-1 w-full">{student.name}</p>
-          <div className={`mt-1 h-1 w-8 rounded-full ${currentColors.split(' ')[0]}`} />
+
+          {/* Student Name */}
+          <p className="text-[10px] md:text-[11px] font-black khmer-font text-slate-800 truncate px-1 w-full leading-tight">
+            {student.name}
+          </p>
+
+          <div className={`mt-1 h-1 w-7 rounded-full ${currentColors.split(' ')[0]}`} />
+
+          {/* Remove student from desk button */}
           <button 
+            type="button"
+            title="ដកសិស្សចេញពីតុនេះ"
             onClick={(e) => { e.stopPropagation(); onRemove(); }}
-            className="absolute -top-2 -right-2 bg-rose-500 text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow-md"
+            className="absolute -top-2 -right-2 bg-rose-500 text-white p-1 rounded-xl opacity-0 group-hover:opacity-100 transition-all shadow-md hover:bg-rose-600"
           >
-            <Trash2 className="w-3 h-3" />
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </>
       ) : (
-        <div className="flex flex-col items-center gap-1 opacity-20 group-hover:opacity-100">
-          <UserPlus className="w-4 h-4 text-slate-400" />
-          <span className="text-[10px] font-black text-slate-500">{label}</span>
+        <div className="flex flex-col items-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
+          {isDragOver ? (
+            <span className="text-[9px] font-black text-indigo-400 khmer-font animate-bounce">
+              ទម្លាក់នៅទីនេះ
+            </span>
+          ) : (
+            <>
+              <UserPlus className="w-4 h-4 text-slate-400" />
+              <span className="text-[9px] font-bold text-slate-400 khmer-font">តុទទេ</span>
+            </>
+          )}
         </div>
       )}
+
       {isSwapSource && (
-        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-amber-500 text-white px-2 py-0.5 rounded-full text-[8px] font-bold whitespace-nowrap animate-bounce">
+        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-amber-500 text-white px-2 py-0.5 rounded-full text-[8px] font-bold whitespace-nowrap animate-bounce shadow-lg">
           ប្តូរពីតុនេះ
         </div>
       )}

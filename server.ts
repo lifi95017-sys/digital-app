@@ -13,22 +13,150 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
+  // Helper function to stream Gemini AI responses with auto key fallback and multi-model retries
+  async function streamGeminiAI(
+    res: express.Response,
+    promptText: string,
+    options: { isJson?: boolean; userApiKey?: string } = {}
+  ) {
+    let defaultApiKey = process.env.Gemini_API_Key || process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+    if (defaultApiKey === "AI Studio Free Tier" && process.env.Gemini_API_Key) {
+      defaultApiKey = process.env.Gemini_API_Key;
+    }
+    if (defaultApiKey === "AI Studio Free Tier" && process.env.VITE_GEMINI_API_KEY) {
+      defaultApiKey = process.env.VITE_GEMINI_API_KEY;
+    }
+
+    const apiKeysToTry: string[] = [];
+    if (
+      options.userApiKey &&
+      typeof options.userApiKey === "string" &&
+      options.userApiKey.trim() &&
+      options.userApiKey !== "AI Studio Free Tier" &&
+      options.userApiKey !== "MY_GEMINI_API_KEY"
+    ) {
+      apiKeysToTry.push(options.userApiKey.trim());
+    }
+    if (defaultApiKey && defaultApiKey !== "AI Studio Free Tier" && defaultApiKey !== "MY_GEMINI_API_KEY") {
+      if (!apiKeysToTry.includes(defaultApiKey)) {
+        apiKeysToTry.push(defaultApiKey);
+      }
+    }
+
+    if (apiKeysToTry.length === 0) {
+      return res.status(500).json({ error: "No valid API key provided. Please check your environment variables." });
+    }
+
+    const modelsToTry = [
+      "gemini-3.6-flash",
+      "gemini-3.5-flash",
+      "gemini-3-flash-preview",
+      "gemini-3.8-flash",
+      "gemini-3.7-flash",
+      "gemini-flash-latest"
+    ];
+
+    let retries = 10;
+    let delay = 600;
+    let currentModelIndex = 0;
+    let currentKeyIndex = 0;
+    let stream: any = null;
+    let lastError: any = null;
+
+    while (retries > 0) {
+      const activeKey = apiKeysToTry[currentKeyIndex];
+      const ai = new GoogleGenAI({
+        apiKey: activeKey,
+        httpOptions: { headers: { "User-Agent": "aistudio-build" } }
+      });
+
+      try {
+        const config: any = {};
+        if (options.isJson) {
+          config.responseMimeType = "application/json";
+        }
+
+        stream = await ai.models.generateContentStream({
+          model: modelsToTry[currentModelIndex],
+          contents: promptText,
+          config
+        });
+        break; // Success
+      } catch (error: any) {
+        retries--;
+        lastError = error;
+        const errorMessage = error.message || "";
+        console.error(`Gemini stream error with ${modelsToTry[currentModelIndex]} (key #${currentKeyIndex}): ${errorMessage}`);
+
+        // If user's custom key failed with auth / quota / permission / invalid, fallback immediately to system key
+        if (
+          currentKeyIndex === 0 &&
+          apiKeysToTry.length > 1 &&
+          (errorMessage.includes("API_KEY_INVALID") ||
+            errorMessage.includes("403") ||
+            errorMessage.includes("PERMISSION_DENIED") ||
+            errorMessage.includes("404") ||
+            errorMessage.includes("RESOURCE_EXHAUSTED") ||
+            errorMessage.includes("Quota") ||
+            errorMessage.includes("quota") ||
+            errorMessage.includes("invalid"))
+        ) {
+          console.log("Switching from user key to server system API key...");
+          currentKeyIndex = 1;
+          continue;
+        }
+
+        if (
+          errorMessage.includes("UNAVAILABLE") ||
+          errorMessage.includes("high demand") ||
+          errorMessage.includes("503") ||
+          errorMessage.includes("429") ||
+          errorMessage.includes("Quota") ||
+          errorMessage.includes("quota") ||
+          errorMessage.includes("404") ||
+          errorMessage.includes("not found") ||
+          errorMessage.includes("500") ||
+          errorMessage.includes("RESOURCE_EXHAUSTED")
+        ) {
+          currentModelIndex = (currentModelIndex + 1) % modelsToTry.length;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          delay = Math.min(delay * 1.3, 2500);
+        } else {
+          if (currentKeyIndex === 0 && apiKeysToTry.length > 1) {
+            currentKeyIndex = 1;
+            continue;
+          }
+          throw error;
+        }
+      }
+    }
+
+    if (!stream) {
+      throw lastError || new Error("Failed to generate content after retries.");
+    }
+
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    try {
+      for await (const chunk of stream) {
+        if (chunk.text) {
+          res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
+        }
+      }
+      res.write("data: [DONE]\n\n");
+      res.end();
+    } catch (err: any) {
+      console.error("Error streaming content chunk:", err);
+      res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
+      res.end();
+    }
+  }
+
   app.post("/api/generateLessonPlan", async (req, res) => {
     try {
-      let apiKey = process.env.Gemini_API_Key || process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-      if (apiKey === "AI Studio Free Tier" && process.env.Gemini_API_Key) {
-        apiKey = process.env.Gemini_API_Key;
-      }
-      if (apiKey === "AI Studio Free Tier" && process.env.VITE_GEMINI_API_KEY) {
-        apiKey = process.env.VITE_GEMINI_API_KEY;
-      }
-      
       const { lesson, grade, promptText: reqPromptText, isJson, userApiKey } = req.body;
-      if (userApiKey) apiKey = userApiKey;
-      if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey === "AI Studio Free Tier") {
-        return res.status(500).json({ error: "No valid API key provided. Please check your environment variables." });
-      }
-      const ai = new GoogleGenAI({ apiKey, httpOptions: { headers: { 'User-Agent': 'aistudio-build' } } });
 
       let finalPromptText = reqPromptText;
 
@@ -53,84 +181,25 @@ async function startServer() {
 ៤. ការវាយតម្លៃ
 ៥. សូមសរសេរជាទម្រង់ Markdown ដែលមានចំណងជើងច្បាស់លាស់ ងាយស្រួលអាន សម្រាប់ព្រីនលើក្រដាស A4។`;
       }
-      let retries = 8;
-      let delay = 1000;
-      let modelsToTry = ["gemini-3.6-flash", "gemini-3.1-flash", "gemini-3.0-flash", "gemini-2.5-flash"];
-      let currentModelIndex = 0;
-      let stream = null;
-      
-      while (retries > 0) {
-        try {
-          const config: any = {};
-          if (isJson) {
-            config.responseMimeType = "application/json";
-          }
-          
-          stream = await ai.models.generateContentStream({
-            model: modelsToTry[currentModelIndex],
-            contents: finalPromptText,
-            config: config
-          });
-          break; // success
-        } catch (error: any) {
-          retries--;
-          const errorMessage = error.message || "";
-          console.error(`Model API error with ${modelsToTry[currentModelIndex]} (${errorMessage})`);
-          if ((errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("404") || errorMessage.includes("not found")) && currentModelIndex < modelsToTry.length - 1) {
-            console.log(`Retrying... (${retries} retries left)`);
-            currentModelIndex = (currentModelIndex + 1) % modelsToTry.length;
-            await new Promise(resolve => setTimeout(resolve, delay));
-            delay *= 1.25; 
-          } else {
-            throw error;
-          }
-        }
-      }
 
-      if (!stream) {
-        throw new Error("Failed to generate content after retries.");
-      }
-      
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-      
-      try {
-        for await (const chunk of stream) {
-          if (chunk.text) {
-             res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
-          }
-        }
-        res.write('data: [DONE]\n\n');
-        res.end();
-      } catch (err: any) {
-        console.error("Error streaming content:", err);
-        res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
-        res.end();
-      }
-    } catch (error: any) { console.error("Error in generateLessonPlan:", error.message || error);
+      await streamGeminiAI(res, finalPromptText, { isJson: !!isJson, userApiKey });
+    } catch (error: any) {
+      console.error("Error in generateLessonPlan:", error.message || error);
       let errorMessage = error.message;
-      if (errorMessage.includes("404") || errorMessage.includes("not found")) { errorMessage = `បញ្ហាគណនី (Account Error): API Key របស់អ្នកគ្មានសិទ្ធិ ឬស្ថិតក្នុង Project ចាស់ដែលត្រូវបិទ។ សូមបង្កើត API Key ថ្មីក្នុង "Project ថ្មី" រួច Paste បញ្ចូលក្នុង Settings ម្តងទៀត។ (Error: ${errorMessage})`; } else { errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`; }
-      res.status(500).json({ error: errorMessage });
+      if (errorMessage.includes("404") || errorMessage.includes("not found")) {
+        errorMessage = `បញ្ហាគណនី (Account Error): API Key គ្មានសិទ្ធិ ឬមិនត្រឹមត្រូវ។ (Error: ${errorMessage})`;
+      } else {
+        errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`;
+      }
+      if (!res.headersSent) {
+        res.status(500).json({ error: errorMessage });
+      }
     }
   });
 
   app.post("/api/generatePisaTest", async (req, res) => {
     try {
-      let apiKey = process.env.Gemini_API_Key || process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-      if (apiKey === "AI Studio Free Tier" && process.env.Gemini_API_Key) {
-        apiKey = process.env.Gemini_API_Key;
-      }
-      if (apiKey === "AI Studio Free Tier" && process.env.VITE_GEMINI_API_KEY) {
-        apiKey = process.env.VITE_GEMINI_API_KEY;
-      }
-      
       const { lesson, grade, subject, userApiKey } = req.body;
-      if (userApiKey) apiKey = userApiKey;
-      if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey === "AI Studio Free Tier") {
-        return res.status(500).json({ error: "No valid API key provided." });
-      }
-      const ai = new GoogleGenAI({ apiKey, httpOptions: { headers: { 'User-Agent': 'aistudio-build' } } });
 
       if (!lesson) {
         return res.status(400).json({ error: "lesson is required" });
@@ -163,79 +232,24 @@ ${gradeConfig} ។
 ៦. នៅផ្នែកខាងចុង សូមផ្តល់នូវ "អត្រាកំណែនិងការដាក់ពិន្ទុ (Rubric)" សម្រាប់គ្រូ ឲ្យបានច្បាស់លាស់សម្រាប់គ្រប់សំណួរទាំងអស់។
 ៧. ចំណាំ៖ ចំពោះប្រភាគ ឬសញ្ញាគណិតវិទ្យា សូមសរសេរជាលេខឬអក្សរធម្មតា (ឧទាហរណ៍៖ 5/8 ឬ ៥/៨)។ ហាមប្រើប្រាស់ទម្រង់កូដ LaTeX (ដូចជា \\frac{5}{8}) ជាដាច់ខាត។`;
 
-      let retries = 8;
-      let delay = 1000;
-      let modelsToTry = ["gemini-3.6-flash", "gemini-3.1-flash", "gemini-3.0-flash", "gemini-2.5-flash"];
-      let currentModelIndex = 0;
-      let stream = null;
-      
-      while (retries > 0) {
-        try {
-          stream = await ai.models.generateContentStream({
-            model: modelsToTry[currentModelIndex],
-            contents: promptText,
-          });
-          break; // success
-        } catch (error: any) {
-          retries--;
-          const errorMessage = error.message || "";
-          console.error(`Model API error with ${modelsToTry[currentModelIndex]} (${errorMessage})`);
-          if ((errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("404") || errorMessage.includes("not found")) && currentModelIndex < modelsToTry.length - 1) {
-            console.log(`Retrying PISA generation... (${retries} retries left)`);
-            currentModelIndex = (currentModelIndex + 1) % modelsToTry.length;
-            await new Promise(resolve => setTimeout(resolve, delay));
-            delay *= 1.25; 
-          } else {
-            throw error;
-          }
-        }
-      }
-
-      if (!stream) {
-        throw new Error("Failed to generate content after retries.");
-      }
-
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-
-      try {
-        for await (const chunk of stream) {
-          if (chunk.text) {
-             res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
-          }
-        }
-        res.write('data: [DONE]\n\n');
-        res.end();
-      } catch (err: any) {
-        console.error("Error streaming content:", err);
-        res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
-        res.end();
-      }
+      await streamGeminiAI(res, promptText, { isJson: false, userApiKey });
     } catch (error: any) {
       console.error("Error in generatePisaTest:", error);
       let errorMessage = error.message;
-      if (errorMessage.includes("404") || errorMessage.includes("not found")) { errorMessage = `បញ្ហាគណនី (Account Error): API Key របស់អ្នកគ្មានសិទ្ធិ ឬស្ថិតក្នុង Project ចាស់ដែលត្រូវបិទ។ សូមបង្កើត API Key ថ្មីក្នុង "Project ថ្មី" រួច Paste បញ្ចូលក្នុង Settings ម្តងទៀត។ (Error: ${errorMessage})`; } else { errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`; }
-      res.status(500).json({ error: errorMessage });
+      if (errorMessage.includes("404") || errorMessage.includes("not found")) {
+        errorMessage = `បញ្ហាគណនី (Account Error): API Key គ្មានសិទ្ធិ ឬមិនត្រឹមត្រូវ។ (Error: ${errorMessage})`;
+      } else {
+        errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`;
+      }
+      if (!res.headersSent) {
+        res.status(500).json({ error: errorMessage });
+      }
     }
   });
 
   app.post("/api/generateSeaPlmTest", async (req, res) => {
     try {
-      let apiKey = process.env.Gemini_API_Key || process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-      if (apiKey === "AI Studio Free Tier" && process.env.Gemini_API_Key) {
-        apiKey = process.env.Gemini_API_Key;
-      }
-      if (apiKey === "AI Studio Free Tier" && process.env.VITE_GEMINI_API_KEY) {
-        apiKey = process.env.VITE_GEMINI_API_KEY;
-      }
-      
       const { lesson, grade, subject, userApiKey } = req.body;
-      if (userApiKey) apiKey = userApiKey;
-      if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey === "AI Studio Free Tier") {
-        return res.status(500).json({ error: "No valid API key provided." });
-      }
-      const ai = new GoogleGenAI({ apiKey, httpOptions: { headers: { 'User-Agent': 'aistudio-build' } } });
 
       if (!lesson) {
         return res.status(400).json({ error: "lesson is required" });
@@ -297,60 +311,18 @@ ${gradeConfig}
 ៦. នៅផ្នែកខាងចុង សូមផ្តល់នូវ "អត្រាកំណែនិងការដាក់ពិន្ទុ (Rubric)" សម្រាប់គ្រូ ឲ្យបានច្បាស់លាស់។`;
       }
 
-      let retries = 8;
-      let delay = 1000;
-      let modelsToTry = ["gemini-3.6-flash", "gemini-3.1-flash", "gemini-3.0-flash", "gemini-2.5-flash"];
-      let currentModelIndex = 0;
-      let stream = null;
-      
-      while (retries > 0) {
-        try {
-          stream = await ai.models.generateContentStream({
-            model: modelsToTry[currentModelIndex],
-            contents: promptText,
-          });
-          break; // success
-        } catch (error: any) {
-          retries--;
-          const errorMessage = error.message || "";
-          console.error(`Model API error with ${modelsToTry[currentModelIndex]} (${errorMessage})`);
-          if ((errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("503") || errorMessage.includes("429") || errorMessage.includes("Quota") || errorMessage.includes("404") || errorMessage.includes("not found")) && currentModelIndex < modelsToTry.length - 1) {
-            console.log(`Retrying SEA-PLM generation... (${retries} retries left)`);
-            currentModelIndex = (currentModelIndex + 1) % modelsToTry.length;
-            await new Promise(resolve => setTimeout(resolve, delay));
-            delay *= 1.25; 
-          } else {
-            throw error;
-          }
-        }
-      }
-
-      if (!stream) {
-        throw new Error("Failed to generate content after retries.");
-      }
-
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-
-      try {
-        for await (const chunk of stream) {
-          if (chunk.text) {
-             res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
-          }
-        }
-        res.write('data: [DONE]\n\n');
-        res.end();
-      } catch (err: any) {
-        console.error("Error streaming content:", err);
-        res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
-        res.end();
-      }
+      await streamGeminiAI(res, promptText, { isJson: false, userApiKey });
     } catch (error: any) {
       console.error("Error in generateSeaPlmTest:", error);
       let errorMessage = error.message;
-      if (errorMessage.includes("404") || errorMessage.includes("not found")) { errorMessage = `បញ្ហាគណនី (Account Error): API Key របស់អ្នកគ្មានសិទ្ធិ ឬស្ថិតក្នុង Project ចាស់ដែលត្រូវបិទ។ សូមបង្កើត API Key ថ្មីក្នុង "Project ថ្មី" រួច Paste បញ្ចូលក្នុង Settings ម្តងទៀត។ (Error: ${errorMessage})`; } else { errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`; }
-      res.status(500).json({ error: errorMessage });
+      if (errorMessage.includes("404") || errorMessage.includes("not found")) {
+        errorMessage = `បញ្ហាគណនី (Account Error): API Key គ្មានសិទ្ធិ ឬមិនត្រឹមត្រូវ។ (Error: ${errorMessage})`;
+      } else {
+        errorMessage = `បញ្ហា AI (AI Error): ${errorMessage}`;
+      }
+      if (!res.headersSent) {
+        res.status(500).json({ error: errorMessage });
+      }
     }
   });
 

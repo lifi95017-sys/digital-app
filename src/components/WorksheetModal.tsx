@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { X, FileText, Download, Printer, Loader2 } from 'lucide-react';
 import { LessonPlan } from '../types';
 import Markdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import remarkGfm from 'remark-gfm';
+// @ts-ignore
+import html2pdf from 'html2pdf.js';
 
 interface Props {
   isOpen: boolean;
@@ -12,15 +17,19 @@ interface Props {
 
 export default function WorksheetModal({ isOpen, onClose, plan, type }: Props) {
   const [content, setContent] = useState('');
+  const [isDone, setIsDone] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     if (isOpen && !hasGenerated) {
+      setIsDone(false);
       const storageKey = `worksheet_${type}_${plan.lessonTitle || 'draft'}`;
       const savedContent = localStorage.getItem(storageKey);
       if (savedContent) {
         setContent(savedContent);
+        setIsDone(true);
         setHasGenerated(true);
       } else {
         generateWorksheet();
@@ -38,8 +47,32 @@ export default function WorksheetModal({ isOpen, onClose, plan, type }: Props) {
       const step3 = plan.steps.step3 || plan.steps['step3']; // New Lesson step
       const contentStr = step3 ? step3.content : Object.values(plan.steps).map((s:any) => s.content).filter(Boolean).join('\n');
       
-      const promptText = `អ្នកគឺជាគ្រូបង្រៀនកម្រិតបឋមដ៏ចំណានម្នាក់នៅកម្ពុជា។ 
-សូមបង្កើត «${isStudent ? 'សន្លឹកកិច្ចការសិស្ស (Student Worksheet)' : 'សន្លឹកកិច្ចការគ្រូ និងអត្រាកំណែ (Teacher Worksheet)'}» ដោយផ្អែកលើកិច្ចតែងការបង្រៀន (ផ្តោតសំខាន់លើមេរៀនថ្មី) ខាងក្រោមនេះ។
+      const isSecondary = typeof plan.grade === 'number' ? plan.grade >= 7 : false;
+      const teacherRole = isSecondary ? 'គ្រូបង្រៀនកម្រិតមធ្យមសិក្សាដ៏ចំណានម្នាក់នៅកម្ពុជា' : 'គ្រូបង្រៀនកម្រិតបឋមដ៏ចំណានម្នាក់នៅកម្ពុជា';
+
+      const existingStudentKey = `worksheet_student_${plan.lessonTitle || 'draft'}`;
+      const existingTeacherKey = `worksheet_teacher_${plan.lessonTitle || 'draft'}`;
+      
+      const existingStudentContent = localStorage.getItem(existingStudentKey);
+      const existingTeacherContent = localStorage.getItem(existingTeacherKey);
+
+      let promptText = '';
+
+      if (isStudent) {
+          if (existingTeacherContent) {
+              promptText = `អ្នកគឺជា${teacherRole}។ 
+នេះគឺជា «សន្លឹកកិច្ចការគ្រូ និងអត្រាកំណែ (Teacher Worksheet)» នៃមេរៀន ${plan.lessonTitle} ថ្នាក់ទី ${plan.grade}៖
+
+${existingTeacherContent}
+
+សូមបង្កើត «សន្លឹកកិច្ចការសិស្ស (Student Worksheet)» ដោយផ្អែកលើសន្លឹកកិច្ចការគ្រូខាងលើ។
+ទម្រង់ទាមទារ៖
+១. សូមចម្លងសំណួរ និងទម្រង់ទាំងស្រុងពី "សន្លឹកកិច្ចការគ្រូ" ខាងលើ (ដូចគ្នាបេះបិទ) ប៉ុន្តែត្រូវលុបចម្លើយចេញ និងទុកចន្លោះប្រហោងសម្រាប់ឲ្យសិស្សសរសេរចម្លើយ។
+២. ផ្នែកក្បាលត្រូវមាន៖ ឈ្មោះសិស្ស, ថ្នាក់ទី, ថ្ងៃខែ, ពិន្ទុ។
+
+សូមសរសេរចេញជាទម្រង់ Markdown ដែលមានរបៀបរៀបរយល្អ។ មិនបាច់សរសេរពាក្យណែនាំទេ ចាប់ផ្តើមសរសេរយកតែម្តង។`;
+          } else {
+              promptText = `អ្នកគឺជា${teacherRole}។ សូមបង្កើត «សន្លឹកកិច្ចការសិស្ស (Student Worksheet)» ដោយផ្អែកលើកិច្ចតែងការបង្រៀន (ផ្តោតសំខាន់លើមេរៀនថ្មី) ខាងក្រោមនេះ។
 {មុខវិជ្ជា៖ ${plan.subject}, មេរៀនទី ${plan.lesson}៖ ${plan.lessonTitle}, ថ្នាក់ទី៖ ${plan.grade}, រយៈពេល៖ ${plan.duration}នាទី}
 
 វត្ថុបំណងមេរៀន៖
@@ -49,9 +82,48 @@ export default function WorksheetModal({ isOpen, onClose, plan, type }: Props) {
 ខ្លឹមសារមេរៀនថ្មី (ពីកិច្ចតែងការ)៖
 ${contentStr}
 
-${isStudent ? 'គោលបំណងសន្លឹកកិច្ចការ៖ សម្រាប់សិស្សអនុវត្តក្នុងថ្នាក់លើមេរៀនថ្មីនេះ។\nទម្រង់ទាមទារ៖\n១. ផ្នែកក្បាល៖ ឈ្មោះសិស្ស, ថ្នាក់ទី, ថ្ងៃខែ, ពិន្ទុ\n២. ផ្នែកលំហាត់/សំនួរ៖ បង្កើតសំនួរ លំហាត់ ផ្គូផ្គង ឬលំហាត់អនុវត្ត ដែលទាញចេញពី "ខ្លឹមសារមេរៀនថ្មី" ខាងលើ។ រៀបចំឲ្យមានចន្លោះសម្រាប់ឆ្លើយ។' : 'គោលបំណងសន្លឹកកិច្ចការគ្រូ៖ នេះជាសន្លឹកកិច្ចការសិស្ស ដែលមានរួមបញ្ចូលនូវចម្លើយ (អត្រាកំណែ) សម្រាប់គ្រូ។\nទម្រង់ទាមទារ៖\n១. សូមចម្លងទម្រង់ទាំងស្រុងនៃ "សន្លឹកកិច្ចការសិស្ស" ដែលទាញចេញពីមេរៀនថ្មីខាងលើ ដោយគ្រាន់តែបំពេញចម្លើយត្រឹមត្រូវជាអក្សរដិត (bold) ឬពណ៌ក្រហម (បើសរសេរបាន) ឬសរសេរក្នុងវង់ក្រចក។\n២. ត្រូវតែមានរូបរាងដូចគ្នាបេះបិទទៅនឹងសន្លឹកកិច្ចការសិស្ស គ្រាន់តែមានចម្លើយ។'}
+គោលបំណងសន្លឹកកិច្ចការ៖ សម្រាប់សិស្សអនុវត្តក្នុងថ្នាក់លើមេរៀនថ្មីនេះ។
+ទម្រង់ទាមទារ៖
+១. ផ្នែកក្បាល៖ ឈ្មោះសិស្ស, ថ្នាក់ទី, ថ្ងៃខែ, ពិន្ទុ
+២. ផ្នែកលំហាត់/សំនួរ៖ បង្កើតសំនួរ លំហាត់ ផ្គូផ្គង ឬលំហាត់អនុវត្ត ដែលទាញចេញពី "ខ្លឹមសារមេរៀនថ្មី" ខាងលើ។ រៀបចំឲ្យមានចន្លោះសម្រាប់ឆ្លើយ។
 
 សូមសរសេរចេញជាទម្រង់ Markdown ដែលមានរបៀបរៀបរយល្អ។ មិនបាច់សរសេរពាក្យណែនាំទេ ចាប់ផ្តើមសរសេរយកតែម្តង។`;
+          }
+      } else {
+          if (existingStudentContent) {
+              promptText = `អ្នកគឺជា${teacherRole}។ 
+នេះគឺជា «សន្លឹកកិច្ចការសិស្ស (Student Worksheet)» នៃមេរៀន ${plan.lessonTitle} ថ្នាក់ទី ${plan.grade}៖
+
+${existingStudentContent}
+
+សូមបង្កើត «សន្លឹកកិច្ចការគ្រូ និងអត្រាកំណែ (Teacher Worksheet)» ដោយផ្អែកលើសន្លឹកកិច្ចការសិស្សខាងលើ។ 
+ខ្លឹមសារមេរៀនពីកិច្ចតែងការ៖
+${contentStr}
+
+ទម្រង់ទាមទារ៖
+១. សូមចម្លងសំណួរ និងទម្រង់ទាំងស្រុងពី "សន្លឹកកិច្ចការសិស្ស" ខាងលើ (ដូចគ្នាបេះបិទ) ប៉ុន្តែត្រូវបំពេញចម្លើយត្រឹមត្រូវសម្រាប់សំណួរនីមួយៗ (ផ្អែកលើខ្លឹមសារមេរៀនខាងលើ)។
+២. អាចបំពេញចម្លើយជាអក្សរដិត (bold) ឬសរសេរក្នុងវង់ក្រចកដើម្បីងាយស្រួលចំណាំ។
+
+សូមសរសេរចេញជាទម្រង់ Markdown ដែលមានរបៀបរៀបរយល្អ។ មិនបាច់សរសេរពាក្យណែនាំទេ ចាប់ផ្តើមសរសេរយកតែម្តង។`;
+          } else {
+              promptText = `អ្នកគឺជា${teacherRole}។ សូមបង្កើត «សន្លឹកកិច្ចការគ្រូ និងអត្រាកំណែ (Teacher Worksheet)» ដោយផ្អែកលើកិច្ចតែងការបង្រៀន (ផ្តោតសំខាន់លើមេរៀនថ្មី) ខាងក្រោមនេះ។
+{មុខវិជ្ជា៖ ${plan.subject}, មេរៀនទី ${plan.lesson}៖ ${plan.lessonTitle}, ថ្នាក់ទី៖ ${plan.grade}, រយៈពេល៖ ${plan.duration}នាទី}
+
+វត្ថុបំណងមេរៀន៖
+- វិជ្ជាសម្បទា៖ ${plan.objectives.knowledge}
+- បំណិនសម្បទា៖ ${plan.objectives.skills}
+
+ខ្លឹមសារមេរៀនថ្មី (ពីកិច្ចតែងការ)៖
+${contentStr}
+
+គោលបំណងសន្លឹកកិច្ចការគ្រូ៖ ជាសន្លឹកកិច្ចការសិស្ស ដែលមានរួមបញ្ចូលនូវចម្លើយ (អត្រាកំណែ) សម្រាប់គ្រូ។
+ទម្រង់ទាមទារ៖
+១. ផ្នែកក្បាល៖ ឈ្មោះសិស្ស, ថ្នាក់ទី, ថ្ងៃខែ, ពិន្ទុ
+២. ផ្នែកលំហាត់/សំនួរ៖ បង្កើតសំនួរ លំហាត់ ផ្គូផ្គង ឬលំហាត់អនុវត្ត ដែលទាញចេញពី "ខ្លឹមសារមេរៀនថ្មី" ខាងលើ ដោយមានបំពេញចម្លើយត្រឹមត្រូវជាអក្សរដិត (bold) ឬសរសេរក្នុងវង់ក្រចក។
+
+សូមសរសេរចេញជាទម្រង់ Markdown ដែលមានរបៀបរៀបរយល្អ។ មិនបាច់សរសេរពាក្យណែនាំទេ ចាប់ផ្តើមសរសេរយកតែម្តង។`;
+          }
+      }
 
       const response = await fetch('/api/generateLessonPlan', {
         method: 'POST',
@@ -96,11 +168,47 @@ ${isStudent ? 'គោលបំណងសន្លឹកកិច្ចការ�
         }
       }
       setContent(text);
+      setIsDone(true);
+      
+      if (isStudent) {
+          localStorage.setItem(existingStudentKey, text);
+      } else {
+          localStorage.setItem(existingTeacherKey, text);
+      }
     } catch (error) {
       console.error(error);
       setContent('*មានបញ្ហាក្នុងការបង្កើតមាតិកា។ សូមព្យាយាមម្ដងទៀត។*');
     }
     setIsLoading(false);
+  };
+
+  
+  const handleDownloadPDF = () => {
+    setIsDownloading(true);
+    const element = document.getElementById('worksheet-content');
+    if (!element) return;
+    
+    // Add print styling temporarily
+    const originalClass = element.className;
+    element.className = "bg-white w-full max-w-[210mm] min-h-[297mm] mx-auto p-[1cm] sm:p-[1.5cm] text-[11pt] leading-relaxed text-slate-800 font-khmer";
+    
+    const opt = {
+      margin:       10,
+      filename:     `${type === 'student' ? 'សន្លឹកកិច្ចការសិស្ស' : 'សន្លឹកកិច្ចការគ្រូ'}_${plan.lessonTitle}.pdf`,
+      image:        { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, logging: false },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+    };
+
+    html2pdf().set(opt).from(element).save().then(() => {
+        setIsDownloading(false);
+        element.className = originalClass;
+    }).catch(err => {
+        console.error("PDF generation failed:", err);
+        setIsDownloading(false);
+        element.className = originalClass;
+        alert('មានបញ្ហាក្នុងការទាញយក PDF។');
+    });
   };
 
   const handleExportWord = () => {
@@ -207,12 +315,12 @@ ${isStudent ? 'គោលបំណងសន្លឹកកិច្ចការ�
                 ទាញយក Word
              </button>
              <button 
-                onClick={() => window.print()}
-                disabled={isLoading || !content}
+                onClick={handleDownloadPDF}
+                disabled={isLoading || !content || isDownloading}
                 className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold transition-colors disabled:opacity-50 flex items-center gap-2"
                 title="ទាញយក PDF (Print)"
               >
-                <Printer className="w-4 h-4" /> ទាញយក PDF
+                {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />} {isDownloading ? 'កំពុងទាញយក...' : 'ទាញយក PDF'}
              </button>
              <button 
                 onClick={handleDelete}
@@ -241,6 +349,8 @@ ${isStudent ? 'គោលបំណងសន្លឹកកិច្ចការ�
                <div className="font-khmer text-[11pt] leading-relaxed text-slate-800">
                   <div className="markdown-body space-y-3">
                     <Markdown
+                      remarkPlugins={[remarkMath, remarkGfm]}
+                      rehypePlugins={[rehypeKatex]}
                       components={{
                         h1: ({node, ...props}) => <h1 className="text-xl font-moul text-center mb-6" {...props} />,
                         h2: ({node, ...props}) => <h2 className="text-lg font-bold mt-6 mb-3" {...props} />,

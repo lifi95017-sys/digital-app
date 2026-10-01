@@ -32,7 +32,7 @@ import {
   ClipboardList,
   Layout,
   TrendingUp,
-  Award,
+  Award, FileQuestion,
   Trophy,
   CalendarCheck,
   Trash2,
@@ -72,6 +72,7 @@ import { collection, query, onSnapshot, orderBy } from './lib/firebase';
 import { Grade, Student, AttendanceRecord, ScoreRecord, DailyLog, LessonPlanPDF, LibraryFile, TeachingMaterialFile } from './types';
 
 // Importing Views
+import QuestionBankView from './components/QuestionBankView';
 import AttendanceView from './components/AttendanceView';
 import StudentManagementView from './components/StudentManagementView';
 import ScoreAnalysisView from './components/ScoreAnalysisView';
@@ -99,6 +100,8 @@ import TeachingStrategiesView from './components/TeachingStrategiesView';
 import TeacherToolboxView from './components/TeacherToolboxView';
 import StudentRewardsView from './components/StudentRewardsView';
 import LessonPlanForm from './components/LessonPlanForm';
+import SecondaryLessonPlanForm from './components/SecondaryLessonPlanForm';
+
 import EducationalGamesView from './components/EducationalGamesView';
 import DemoClassesView from './components/DemoClassesView';
 import GenericPDFArchiveView from './components/GenericPDFArchiveView';
@@ -240,6 +243,7 @@ export default function App() {
               {view === 'attendance' && <AttendanceView onBack={onBack} />}
               {view === 'student-management' && <StudentManagementView onBack={onBack} />}
               {view === 'score-analysis' && <ScoreAnalysisView onBack={onBack} />}
+              {view === 'question-bank' && <QuestionBankView onBack={onBack} />}
               {view === 'grade-summary' && <GradeSummaryView onBack={onBack} students={students} />}
               {view === 'daily-logs' && <DailyLogView onBack={onBack} />}
               {view === 'teacher-dev' && <TeacherDevView onBack={onBack} />}
@@ -256,7 +260,7 @@ export default function App() {
               {view === 'classroom-mgmt' && <ClassroomManagementView onBack={onBack} students={students} />}
               {view === 'administration' && <AdministrationView onBack={onBack} students={students} />}
               {view === 'teacher-accounts' && <TeacherAccountManagementView onBack={onBack} />}
-              {view === 'resources' && <ResourceTrackingView onBack={onBack} />}
+              {(view === 'resources' || view === 'inventory') && <ResourceTrackingView onBack={onBack} />}
               {view === 'egr-package' && <EGRPackageView onBack={onBack} />}
               {view === 'egr-math' && <EarlyGradeMathView onBack={onBack} students={students} />}
               {view === 'certificates' && <DigitalCertificateView onBack={onBack} students={students} />}
@@ -265,6 +269,7 @@ export default function App() {
               {view === 'toolbox' && <TeacherToolboxView onBack={onBack} />}
               {view === 'student-rewards' && <StudentRewardsView onBack={onBack} />}
               {view === 'lesson-plan' && <LessonPlanForm onBack={onBack} />}
+              {view === 'secondary-lesson-plan' && <SecondaryLessonPlanForm onBack={onBack} />}
               {view === 'edu-games' && <EducationalGamesView onBack={onBack} />}
               {view === 'demo-classes' && <DemoClassesView onBack={onBack} />}
               {view === 'absent-list' && <MonthlyAttendanceReport onBack={onBack} />}
@@ -316,19 +321,7 @@ export default function App() {
                 />
               )}
               
-              {!['dashboard', 'attendance', 'student-management', 'score-analysis', 'grade-summary', 'daily-logs', 'teacher-dev', 'classroom-tools', 'admin-calendar', 'student-card', 'school-archive', 'difficult-words', 'at-risk-warning', 'qr-scanner', 'schedule', 'parent-comm', 'classroom-mgmt', 'administration', 'resources', 'egr-package', 'egr-math', 'certificates', 'seating-chart', 'teaching-strategies', 'toolbox', 'student-rewards', 'lesson-plan', 'edu-games', 'demo-classes', 'absent-list', 'library', 'materials', 'pisa-test', 'sea-plm-test', 'homework'].includes(view) && (
-                <div className="text-center py-20 bg-white rounded-[3rem] shadow-xl border border-dashed border-slate-200">
-                  <AlertTriangle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
-                  <h2 className="text-2xl font-black font-kantumruy">ផ្នែកនេះកំពុងអភិវឌ្ឍ...</h2>
-                  <p className="text-slate-400 font-khmer mt-2">សូមជ្រើសរើសផ្នែកផ្សេងៗនៅលើផ្ទាំងដើម</p>
-                  <button 
-                    onClick={onBack} 
-                    className="mt-8 px-10 py-3 bg-emerald-600 text-white rounded-2xl font-black shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all active:scale-95"
-                  >
-                    ត្រឡប់ទៅផ្ទាំងដើម
-                  </button>
-                </div>
-              )}
+
             </motion.div>
           )}
         </AnimatePresence>
@@ -421,7 +414,8 @@ function Dashboard({ setView, atRiskCount }: { setView: (view: string) => void, 
           <BookText className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-amber-600" /> ២. ផ្នែកផែនការ និងការបង្រៀនប្រចាំថ្ងៃ
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5">
-          <MenuCard title="បង្កើតកិច្ចតែងការ" icon={<BookText />} color="amber" onClick={() => setView('lesson-plan')} />
+          <MenuCard title="កិច្ចតែងការ (១-៦)" icon={<BookText />} color="amber" onClick={() => setView('lesson-plan')} />
+          <MenuCard title="ថ្នាក់ទី៧ដល់ទី១២" icon={<BookText />} color="indigo" onClick={() => setView('secondary-lesson-plan')} />
           <MenuCard title="ល្បែងសិក្សា" icon={<Gamepad2 />} color="orange" onClick={() => setView('edu-games')} />
           <MenuCard title="ជំនួយការគ្រូ AI" icon={<Sparkles />} color="violet" onClick={() => setView('classroom-tools')} />
           <MenuCard title="កាលវិភាគបង្រៀន" icon={<Calendar />} color="cyan" onClick={() => setView('schedule')} />
@@ -441,6 +435,7 @@ function Dashboard({ setView, atRiskCount }: { setView: (view: string) => void, 
           <MenuCard title="សៀវភៅតាមដាន" icon={<ClipboardList />} color="lime" onClick={() => setView('daily-logs')} />
           <MenuCard title="បណ្ណសរសើរឌីជីថល" icon={<Award />} color="yellow" onClick={() => setView('certificates')} />
           <MenuCard title="ប្រព័ន្ធរង្វាន់សិស្ស" icon={<Trophy />} color="purple" onClick={() => setView('student-rewards')} />
+          <MenuCard title="កម្រងសំណួរ (Question Bank)" icon={<FileQuestion />} color="teal" onClick={() => setView('question-bank')} />
         </div>
       </section>
 
@@ -463,13 +458,12 @@ function Dashboard({ setView, atRiskCount }: { setView: (view: string) => void, 
       {/* 5. Administration & Logistics */}
       <section className="bg-slate-100 border border-slate-200/50 rounded-[2rem] p-4 sm:p-6 lg:p-8 relative overflow-hidden">
         <h2 className="text-lg md:text-xl font-bold mb-4 sm:mb-5 text-slate-800 flex items-center gap-3 font-kantumruy tracking-tight">
-          <FileText className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-slate-600" /> ៥. ផ្នែករដ្ឋបាល ភស្តុភារ និងសុវត្ថិភាព
+          <FileText className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-slate-600" /> ៥. ផ្នែករដ្ឋបាល និងភស្តុភារ
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5">
           <MenuCard title="រដ្ឋបាល & ឯកសារ" icon={<FileText />} color="indigo2" onClick={() => setView('administration')} />
           <MenuCard title="គណនីគ្រូ (បញ្ជាក់អត្តសញ្ញាណ)" icon={<KeyRound />} color="cyan2" onClick={() => setView('teacher-accounts')} />
           <MenuCard title="សារពើភ័ណ្ឌ & ខ្ចីសង" icon={<Package />} color="sky2" onClick={() => setView('inventory')} />
-          <MenuCard title="សញ្ញាគ្រោះថ្នាក់" icon={<ShieldAlert />} color="pink2" onClick={() => setView('danger-signs')} />
         </div>
       </section>
 

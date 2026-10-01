@@ -57,13 +57,15 @@ export default function SlideGeneratorModal({ isOpen, onClose, plan }: Props) {
       const stepsArr = Object.values(plan.steps);
       const contentStr = stepsArr.map(s => s.content).filter(Boolean).join('\n');
       
+      const teacherWorksheetKey = `worksheet_teacher_${plan.lessonTitle || 'draft'}`;
+      const teacherWorksheetContent = localStorage.getItem(teacherWorksheetKey);
+      
+      const isSecondary = typeof plan.grade === 'number' ? plan.grade >= 7 : false;
+      const targetAudience = isSecondary ? 'សិស្សអនុវិទ្យាល័យ ឬវិទ្យាល័យ' : 'សិស្សកុមារតូចៗ';
       const promptText = `អ្នកគឺជាអ្នកបង្កើតស្លាយបទបង្ហាញដ៏ចំណានម្នាក់។ សូមប្រែសម្រួលកិច្ចតែងការបង្រៀននេះទៅជាស្លាយបទបង្ហាញដ៏ទាក់ទាញ (Presentation Outline)។
 ម៉ោងសិក្សា៖ ${plan.subject}, មេរៀន៖ ${plan.lessonTitle}, ថ្នាក់ទី៖ ${plan.grade}
 
-ខ្លឹមសារមេរៀនពីកិច្ចតែងការ៖
-${contentStr}
-
-សូមបង្កើតជាស្លាយបទបង្ហាញ ដោយយកតាមលំដាប់លំដោយនៃខ្លឹមសារមេរៀនពីកិច្ចតែងការខាងលើ (ពិសេសផ្តោតលើមេរៀនថ្មី និងសកម្មភាពពង្រឹងចំណេះដឹង)។
+${teacherWorksheetContent ? `នេះជាសន្លឹកកិច្ចការគ្រូ៖\n${teacherWorksheetContent}\n\nសូមបង្កើតជាស្លាយបទបង្ហាញ ដោយយកតាមខ្លឹមសារនៃសន្លឹកកិច្ចការគ្រូខាងលើជាចម្បង (ត្រូវប្រាកដថាបញ្ចូលខ្លឹមសារមេរៀន លំហាត់ និងចម្លើយពីសន្លឹកកិច្ចការគ្រូចូលក្នុងស្លាយឱ្យបានក្បោះក្បាយ)។` : `ខ្លឹមសារមេរៀនពីកិច្ចតែងការ៖\n${contentStr}\n\nសូមបង្កើតជាស្លាយបទបង្ហាញ ដោយយកតាមលំដាប់លំដោយនៃខ្លឹមសារមេរៀនពីកិច្ចតែងការខាងលើ (ពិសេសផ្តោតលើមេរៀនថ្មី និងសកម្មភាពពង្រឹងចំណេះដឹង) ហើយរៀបចំវាឱ្យមានទម្រង់ដូចជាសន្លឹកកិច្ចការគ្រូ (មានការពន្យល់មេរៀន លំហាត់ និងអត្រាកំណែ)។`}
 សូមបង្កើតជាទម្រង់ JSON Array ដោយមិនមានពាក្យណែនាំអ្វីផ្សេង ដូចទម្រង់ខាងក្រោម៖
 [
   {
@@ -83,10 +85,9 @@ ${contentStr}
 
 កំណត់សម្គាល់៖
 - type អាចជា៖ intro, content, activity, summary។
-- ការរចនា (design) ត្រូវមានពណ៌ចម្រុះ ស្រស់ស្អាត ទាក់ទាញសិស្សកុមារតូចៗ។
-- រូបភាព (imageKeyword) ត្រូវតែពាក់ព័ន្ធនឹងខ្លឹមសារមេរៀន។ បើចង់បានរូបភាពតុក្កតា សូមបញ្ជាក់ពាក្យ 'cartoon' ក្នុង keyword។
-- imagePos គឺទីតាំងរូបភាព៖ left, right, top, bottom, background ឬ none (មិនដាក់រូបភាព)។`;
-
+- ការរចនា (design) ត្រូវមានពណ៌ចម្រុះ ស្រស់ស្អាត ទាក់ទាញ${targetAudience}។
+- រូបភាព (imageKeyword) ត្រូវតែមានជានិច្ច (ហាមទទេ)។ ត្រូវសរសេរជាភាសាអង់គ្លេសសុទ្ធ ខ្លីៗ គ្មានសញ្ញាពិសេស។ (ឧ. "cute math cartoon", "beautiful nature")។ កុំសរសេរប្រយោគវែងៗ។
+- imagePos គឺទីតាំងរូបភាព៖ ត្រូវតែជ្រើសរើសមួយក្នុងចំណោម left, right, top, bottom, ឬ background (ហាមយក none ដើម្បីអោយស្លាយមានរូបភាពគ្រប់ទំព័រ)។`;
       const response = await fetch('/api/generateLessonPlan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -164,7 +165,7 @@ ${contentStr}
 
         let imagePath = '';
         if (slide.imageKeyword && imagePos !== 'none') {
-          imagePath = `https://image.pollinations.ai/prompt/${encodeURIComponent(slide.imageKeyword)}?nologo=true`;
+          imagePath = `https://image.pollinations.ai/prompt/${encodeURIComponent(slide.imageKeyword.replace(/[^a-zA-Z0-9 ]/g, ''))}?nologo=true`;
         }
 
         if (imagePos === 'background' && imagePath) {
@@ -322,9 +323,9 @@ ${contentStr}
             ) : slides.length > 0 ? (
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                  {slides.map((slide, index) => {
-                   const hasImage = slide.imageKeyword && slide.design?.imagePos !== 'none';
-                   const imgUrl = hasImage ? `https://image.pollinations.ai/prompt/${encodeURIComponent(slide.imageKeyword!)}?width=400&height=400&nologo=true` : '';
-                   const bgUrl = slide.design?.imagePos === 'background' ? `https://image.pollinations.ai/prompt/${encodeURIComponent(slide.imageKeyword!)}?width=800&height=600&nologo=true` : '';
+                   const hasImage = slide.imageKeyword && slide.imageKeyword.toLowerCase() !== 'none' && slide.design?.imagePos !== 'none';
+                   const imgUrl = hasImage ? `https://image.pollinations.ai/prompt/${encodeURIComponent(slide.imageKeyword! + ' simple illustration')}?width=400&height=400&nologo=true` : '';
+                   const bgUrl = slide.design?.imagePos === 'background' ? `https://image.pollinations.ai/prompt/${encodeURIComponent(slide.imageKeyword! + ' simple illustration background')}?width=800&height=600&nologo=true` : '';
 
                    return (
                      <div 

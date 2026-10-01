@@ -1,5 +1,4 @@
-import pptxgen from 'pptxgenjs';
-let pres = new pptxgen();
-let slide = pres.addSlide();
-slide.addImage({ path: 'https://image.pollinations.ai/prompt/cute%20cat?width=400&height=300&nologo=true', x: 1, y: 1, w: 4, h: 3 });
-pres.writeFile({ fileName: 'test_img.pptx' }).then(() => console.log('done')).catch(console.error);
+const fetch = require('node-fetch');
+fetch('https://image.pollinations.ai/prompt/Truth%20Table%20simple%20illustration?width=400&height=400&nologo=true')
+  .then(res => console.log(res.status, res.headers.get('content-type')))
+  .catch(err => console.error(err));

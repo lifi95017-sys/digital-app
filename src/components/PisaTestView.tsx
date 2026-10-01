@@ -5,6 +5,9 @@ import {
 } from 'lucide-react';
 import { LibraryFile } from '../types';
 import Markdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import remarkGfm from 'remark-gfm';
 import { saveAs } from 'file-saver';
 
 interface PisaTestViewProps {
@@ -476,7 +479,7 @@ export default function PisaTestView
                 ) : (
                   <div className="bg-white p-10 rounded-xl shadow-sm border border-slate-200 min-h-[297mm] max-w-[210mm] mx-auto text-slate-800">
                     <div ref={contentRef} className="markdown-body font-khmer">
-                      <Markdown>{generatedText}</Markdown>
+                      <Markdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[rehypeKatex]} >{generatedText}</Markdown>
                     </div>
                   </div>
                 )}
@@ -548,7 +551,7 @@ export default function PisaTestView
               <div className="p-8 flex-1 overflow-y-auto bg-slate-100">
                 <div className="bg-white p-10 rounded-xl shadow-sm border border-slate-200 min-h-[297mm] max-w-[210mm] mx-auto text-slate-800">
                   <div ref={contentRef} className="markdown-body font-khmer">
-                    <Markdown>{viewingFile.fileData.replace('markdown:', '')}</Markdown>
+                    <Markdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[rehypeKatex]} >{viewingFile.fileData.replace('markdown:', '')}</Markdown>
                   </div>
                 </div>
               </div>

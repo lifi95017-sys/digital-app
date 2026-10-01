@@ -1,0 +1,10 @@
+const fs = require('fs');
+let content = fs.readFileSync('src/components/LessonPlanForm.tsx', 'utf8');
+
+content = content.replace("  const [showSlideGenerator, setShowSlideGenerator] = useState(false);\n  const [referenceFile, setReferenceFile] = useState<{name: string, url: string} | null>(null);", "  const [showSlideGenerator, setShowSlideGenerator] = useState(false);");
+
+content = content.replace(/  const handleReferenceFileUpload = \([\s\S]*?\};\n/, "");
+
+content = content.replace(/                <div>\n                  <div className="flex items-center justify-between pl-2 mb-2">\n                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest block">សៀវភៅឯកសារយោង \(Reference Document\)<\/label>\n                    \{referenceFile && \(\n                      <a \n                        href=\{referenceFile\.url\} \n                        target="_blank" \n                        rel="noopener noreferrer"\n                        className="text-\[10px\] sm:text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2 sm:px-3 py-1 rounded-full flex items-center gap-1\.5 transition-colors"\n                      >\n                        <BookOpen className="w-3\.5 h-3\.5" \/>\n                        មើលឯកសារ\n                      <\/a>\n                    \)\}\n                  <\/div>\n                  <div className="flex items-center gap-2 w-full px-5 py-3 bg-slate-50 rounded-xl focus-within:ring-2 focus-within:ring-emerald-500 font-khmer text-sm">\n                    <input \n                      type="file" \n                      accept="\.pdf,\.doc,\.docx,\.jpg,\.png" \n                      onChange=\{handleReferenceFileUpload\} \n                      className="w-full text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" \n                    \/>\n                  <\/div>\n                <\/div>\n/, "");
+
+fs.writeFileSync('src/components/LessonPlanForm.tsx', content);

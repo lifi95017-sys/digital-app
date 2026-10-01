@@ -91,8 +91,22 @@ export default function StudentManagementView({
     academicYear: "២០២៤-២០២៥",
     teacherName: "លោកគ្រូ អ៊ុំ សុភក្ត្រា",
   });
+
   const [searchTerm, setSearchTerm] = useState("");
   const [showMoEYSReport, setShowMoEYSReport] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newStudentData, setNewStudentData] = useState({
+    photoUrl: "",
+    name: "",
+    gender: "ប្រុស",
+    dob: "",
+    fatherName: "",
+    motherName: "",
+    village: "",
+    district: "",
+    province: "",
+  });
+
 
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -135,23 +149,29 @@ export default function StudentManagementView({
     }
   };
 
-  const handleAddStudent = async () => {
+
+  const handleAddStudent = () => {
+    setShowAddModal(true);
+  };
+
+  const saveNewStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
     // Generate next roll number (e.g. 001, 002...)
     const nextRollNum = String(students.length + 1).padStart(3, "0");
 
     const newStudent: any = {
-      name: "សិស្សថ្មី",
+      name: newStudentData.name || "សិស្សថ្មី",
       rollNumber: nextRollNum,
-      gender: "ប្រុស",
+      gender: newStudentData.gender,
       grade: 6,
-      dob: "",
-      fatherName: "",
-      motherName: "",
-      village: "",
-      district: "",
-      province: "",
+      dob: newStudentData.dob,
+      fatherName: newStudentData.fatherName,
+      motherName: newStudentData.motherName,
+      village: newStudentData.village,
+      district: newStudentData.district,
+      province: newStudentData.province,
       status: "active",
-      photoUrl: "",
+      photoUrl: newStudentData.photoUrl || "",
       stars: {
         cleanliness: 0,
         friendliness: 0,
@@ -168,10 +188,23 @@ export default function StudentManagementView({
     const path = "students";
     try {
       await addDoc(collection(db, path), newStudent);
+      setShowAddModal(false);
+      setNewStudentData({
+        name: "",
+        gender: "ប្រុស",
+        dob: "",
+        fatherName: "",
+        motherName: "",
+        village: "",
+        district: "",
+        province: "",
+        photoUrl: "",
+      });
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, path);
     }
   };
+
 
   const handleUpdateStudent = async (id: string, updates: Partial<Student>) => {
     const path = "students";
@@ -351,388 +384,172 @@ export default function StudentManagementView({
         />
       </div>
 
-      {/* Document Wrapper */}
-      <div
-        ref={printRef}
-        className="bg-white rounded-[3rem] shadow-2xl border border-slate-100 overflow-hidden print:shadow-none print:border-none print:rounded-none"
-      >
-        {/* Editable MoEYS Header */}
-        <div className="p-12 border-b border-dashed border-slate-100 bg-slate-50/30 print:p-0 print:bg-transparent">
-          <div className="text-center space-y-6">
-            <div className="inline-block px-10 py-2 border-2 border-slate-200 rounded-full print:border-none print:p-0 bg-white">
-              <input
-                type="text"
-                value={classInfo.schoolName}
-                onChange={(e) => handleUpdateInfo("schoolName", e.target.value)}
-                className="text-2xl font-black text-slate-800 khmer-font text-center bg-transparent outline-none w-full border-none focus:ring-0"
-                placeholder="ឈ្មោះសាលារៀន"
-              />
-            </div>
+      {/* Document Wrapper - Removed as requested */}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-              <HeaderField
-                label="ឆ្នាំសិក្សា"
-                value={classInfo.academicYear}
-                onChange={(val) => handleUpdateInfo("academicYear", val)}
-                align="left"
-              />
-              <HeaderField
-                label="ថ្នាក់/កម្រិត"
-                value={classInfo.grade}
-                onChange={(val) => handleUpdateInfo("grade", val)}
-                align="center"
-              />
-              <HeaderField
-                label="គ្រូបន្ទុកថ្នាក់"
-                value={classInfo.teacherName}
-                onChange={(val) => handleUpdateInfo("teacherName", val)}
-                align="right"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Search Bar - Hidden In Print */}
-        <div className="p-6 bg-slate-900 border-b border-slate-800 flex items-center gap-6 print:hidden">
-          <div className="relative flex-1">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-            <input
-              type="text"
-              placeholder="ស្វែងរកតាមឈ្មោះសិស្ស ឬ លេខរៀង ID..."
-              className="w-full pl-14 pr-4 py-4 bg-slate-800 text-white rounded-2xl border border-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none khmer-font transition-all"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+      <AnimatePresence>
+        {showAddModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+              onClick={() => setShowAddModal(false)}
             />
-          </div>
-        </div>
-
-        {/* Official Table Layout */}
-        <div className="overflow-x-auto print:overflow-visible">
-          <table className="w-full text-sm border-collapse print:text-[8px]">
-            <thead className="bg-slate-50 print:bg-white">
-              <tr>
-                <th className="cell-header w-12">ល.រ</th>
-                <th className="cell-header w-20">រូបភាព</th>
-                <th className="cell-header min-w-[150px]">គោត្តនាម - នាម</th>
-                <th className="cell-header w-16">ភេទ</th>
-                <th className="cell-header w-32">ថ្ងៃខែឆ្នាំកំណើត</th>
-                <th className="cell-header min-w-[120px]">ឈ្មោះឪពុក</th>
-                <th className="cell-header min-w-[120px]">ឈ្មោះម្តាយ</th>
-                <th className="cell-header min-w-[120px]">ភូមិ/ឃុំ/សង្កាត់</th>
-                <th className="cell-header min-w-[120px]">ក្រុង/ស្រុក/ខេត្ត</th>
-                <th className="cell-header w-24">ស្ថានភាព</th>
-                <th className="cell-header w-12 print:hidden">-</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 print:divide-slate-200">
-              {filteredStudents.map((student, index) => (
-                <tr
-                  key={student.id}
-                  className="group hover:bg-indigo-50/30 transition-colors print:hover:bg-white"
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl p-8 z-10"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold khmer-font text-slate-800">បន្ថែមសិស្សថ្មី</h3>
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
                 >
-                  <td className="cell-content text-center font-black text-slate-300">
-                    <input
-                      type="text"
-                      value={
-                        student.rollNumber || String(index + 1).padStart(3, "0")
-                      }
-                      onChange={(e) =>
-                        handleUpdateStudent(student.id!, {
-                          rollNumber: e.target.value,
-                        })
-                      }
-                      className="input-inline text-center !w-12"
-                    />
-                  </td>
-                  <td className="cell-content text-center">
-                    <div className="relative inline-block">
-                      <div
-                        className="w-12 h-12 rounded-full border-2 border-white shadow-sm overflow-hidden bg-slate-100 flex items-center justify-center cursor-pointer hover:ring-4 hover:ring-indigo-50 transition-all print:w-10 print:h-10 print:border"
-                        onClick={() =>
-                          document
-                            .getElementById(`photo-${student.id}`)
-                            ?.click()
-                        }
-                      >
-                        {student.photoUrl ? (
-                          <img
-                            src={student.photoUrl}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <Camera className="w-5 h-5 text-slate-300" />
-                        )}
-                      </div>
-                      <input
-                        id={`photo-${student.id}`}
-                        type="file"
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <form onSubmit={saveNewStudent} className="space-y-4">
+                <div className="flex items-center gap-6">
+                  <div className="relative w-24 h-24 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden shrink-0 group">
+                    {newStudentData.photoUrl ? (
+                      <img src={newStudentData.photoUrl} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <Camera className="w-8 h-8 text-slate-300" />
+                    )}
+                    <label className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                      <Camera className="w-6 h-6 text-white mb-1" />
+                      <span className="text-[10px] text-white font-bold khmer-font">ជ្រើសរើស</span>
+                      <input 
+                        type="file" 
                         accept="image/*"
                         className="hidden"
-                        onChange={(e) => handlePhotoUpload(student.id!, e)}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setNewStudentData(prev => ({...prev, photoUrl: reader.result as string}));
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
                       />
-                    </div>
-                  </td>
-                  <td className="cell-content text-center">
-                    <input
-                      type="text"
-                      value={student.name}
-                      onChange={(e) =>
-                        handleUpdateStudent(student.id!, {
-                          name: e.target.value,
-                        })
-                      }
-                      className="input-inline font-black text-slate-800 text-center"
-                    />
-                  </td>
-                  <td className="cell-content text-center">
-                    <select
-                      value={student.gender}
-                      onChange={(e) =>
-                        handleUpdateStudent(student.id!, {
-                          gender: e.target.value as any,
-                        })
-                      }
-                      className={`w-full bg-transparent outline-none font-bold khmer-font text-center cursor-pointer py-1.5 rounded-xl border border-transparent hover:border-slate-100 ${student.gender === "ស្រី" || student.gender === "female" ? "bg-pink-100 text-pink-600" : "bg-blue-100 text-blue-600"}`}
-                    >
-                      <option value="ប្រុស">ប្រុស</option>
-                      <option value="ស្រី">ស្រី</option>
-                    </select>
-                  </td>
-                  <td className="cell-content text-center">
-                    <input
-                      type="text"
-                      placeholder="DD-MM-YYYY"
-                      value={student.dob}
-                      onChange={(e) =>
-                        handleUpdateStudent(student.id!, {
-                          dob: e.target.value,
-                        })
-                      }
-                      className="input-inline text-slate-600 font-bold text-center"
-                    />
-                  </td>
-                  <td className="cell-content text-center">
-                    <input
-                      type="text"
-                      placeholder="..."
-                      value={student.fatherName}
-                      onChange={(e) =>
-                        handleUpdateStudent(student.id!, {
-                          fatherName: e.target.value,
-                        })
-                      }
-                      className="input-inline text-slate-500 text-center"
-                    />
-                  </td>
-                  <td className="cell-content text-center">
-                    <input
-                      type="text"
-                      placeholder="..."
-                      value={student.motherName}
-                      onChange={(e) =>
-                        handleUpdateStudent(student.id!, {
-                          motherName: e.target.value,
-                        })
-                      }
-                      className="input-inline text-slate-500 text-center"
-                    />
-                  </td>
-                  <td className="cell-content text-center">
-                    <input
-                      type="text"
-                      placeholder="..."
-                      value={student.village || ""}
-                      onChange={(e) =>
-                        handleUpdateStudent(student.id!, {
-                          village: e.target.value,
-                        })
-                      }
-                      className="input-inline text-slate-500 text-center"
-                    />
-                  </td>
-                  <td className="cell-content text-center">
-                    <input
-                      type="text"
-                      placeholder="..."
-                      value={student.province || ""}
-                      onChange={(e) =>
-                        handleUpdateStudent(student.id!, {
-                          province: e.target.value,
-                        })
-                      }
-                      className="input-inline text-slate-500 text-center"
-                    />
-                  </td>
-                  <td className="cell-content text-center">
-                    <select
-                      value={student.status || "active"}
-                      onChange={(e) =>
-                        handleUpdateStudent(student.id!, {
-                          status: e.target.value as any,
-                        })
-                      }
-                      className={`w-full bg-transparent outline-none font-bold khmer-font text-[10px] text-center cursor-pointer py-1 rounded-xl border border-transparent hover:border-slate-100 ${student.status === "inactive" ? "bg-slate-100 text-slate-400" : "bg-emerald-50 text-emerald-600 font-black"}`}
-                    >
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                    </select>
-                  </td>
-                  <td className="cell-content text-center print:hidden">
-                    <button
-                      onClick={() => handleDeleteStudent(student.id!)}
-                      className="p-2 text-rose-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Signature & Summary Section */}
-        <div className="p-8 pb-12 border-t border-slate-100 font-kantumruy text-[13px] leading-relaxed bg-white print:p-4 print:text-[11px] print:break-inside-avoid">
-          <div className="flex flex-col md:flex-row justify-between gap-8 md:gap-4 w-full">
-            {/* Left Summary Box */}
-            <div className="flex-1">
-              <div className="grid grid-cols-[auto_minmax(40px,auto)_auto_minmax(60px,auto)_auto_minmax(60px,auto)] gap-x-3 gap-y-3 items-center w-fit">
-                {/* Row 1 */}
-                <div className="text-right text-green-700">
-                  បញ្ចប់បញ្ជីត្រឹមលេខរៀងទី
-                </div>
-                <input
-                  className="w-10 text-center bg-transparent border-b border-transparent outline-none print:border-none focus:border-blue-200 text-blue-700 font-bold"
-                  defaultValue={stats.total}
-                />
-
-                <div className="text-right text-green-700">សិស្សសរុប</div>
-                <div className="flex items-center text-blue-700">
-                  <input
-                    className="w-8 text-center bg-transparent border-b border-transparent outline-none print:border-none focus:border-blue-200 font-bold"
-                    defaultValue={stats.total}
-                  />
-                  <span>នាក់</span>
-                </div>
-
-                <div className="text-right text-green-700">ស្រី</div>
-                <div className="flex items-center text-blue-700">
-                  <input
-                    className="w-8 text-center bg-transparent border-b border-transparent outline-none print:border-none focus:border-blue-200 font-bold"
-                    defaultValue={stats.female}
-                  />
-                  <span>នាក់</span>
-                </div>
-
-                {/* Row 2 */}
-                <div className="col-span-3 text-right text-green-700">
-                  សិស្សឡើងថ្មីសរុបមានចំនួន
-                </div>
-
-                <div className="flex items-center text-blue-700">
-                  <input
-                    className="w-8 text-center bg-transparent border-b border-transparent outline-none print:border-none focus:border-blue-200 font-bold"
-                    defaultValue=""
-                    placeholder="..."
-                  />
-                  <span>នាក់</span>
-                </div>
-
-                <div className="text-right text-green-700">ស្រី</div>
-                <div className="flex items-center text-blue-700">
-                  <input
-                    className="w-8 text-center bg-transparent border-b border-transparent outline-none print:border-none focus:border-blue-200 font-bold"
-                    defaultValue=""
-                    placeholder="..."
-                  />
-                  <span>នាក់</span>
-                </div>
-
-                {/* Row 3 */}
-                <div className="col-span-3 text-right text-green-700">
-                  សិស្សចាស់សរុបមានចំនួន
-                </div>
-
-                <div className="flex items-center text-blue-700">
-                  <input
-                    className="w-8 text-center bg-transparent border-b border-transparent outline-none print:border-none focus:border-blue-200 font-bold"
-                    defaultValue=""
-                    placeholder="..."
-                  />
-                  <span>នាក់</span>
-                </div>
-
-                <div className="text-right text-green-700">ស្រី</div>
-                <div className="flex items-center text-blue-700">
-                  <input
-                    className="w-8 text-center bg-transparent border-b border-transparent outline-none print:border-none focus:border-blue-200 font-bold"
-                    defaultValue=""
-                    placeholder="..."
-                  />
-                  <span>នាក់</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Signature Box */}
-            <div className="flex-1 flex justify-end">
-              <div className="flex flex-col items-center w-full max-w-sm">
-                <input
-                  type="text"
-                  defaultValue="ថ្ងៃពុធ ១៤រោច ខែកត្ដិក ឆ្នាំថោះ បញ្ចស័ក ព.ស. ២៥៦៧"
-                  className="w-full min-w-[320px] text-center bg-transparent border-b border-transparent outline-none mb-1 focus:bg-slate-50 rounded text-blue-800"
-                />
-                <div className="flex justify-center items-center w-full mb-10 text-blue-800">
-                  <span>ធ្វើនៅ</span>
-                  <input
-                    type="text"
-                    className="w-24 text-center bg-transparent border-b border-transparent outline-none focus:bg-slate-50 font-bold px-1 rounded"
-                    defaultValue="ពោធិ៍ជ្រៃ"
-                  />
-                  <span>ថ្ងៃទី</span>
-                  <input
-                    type="text"
-                    className="w-8 text-center bg-transparent border-b border-transparent outline-none focus:bg-slate-50 font-bold rounded"
-                    defaultValue="១១"
-                  />
-                  <span>ខែ</span>
-                  <input
-                    type="text"
-                    className="w-12 text-center bg-transparent border-b border-transparent outline-none focus:bg-slate-50 font-bold rounded"
-                    defaultValue="ធ្នូ"
-                  />
-                  <span>ឆ្នាំ២០២៣</span>
-                </div>
-
-                <div className="w-full flex justify-between gap-4">
-                  {/* Principal Signature */}
-                  <div className="flex-1 text-center font-bold">
-                    <div className="mb-2 text-green-700">បានឃើញ និង ឯកភាព</div>
-                    <div className="text-green-700">នាយកសាលា</div>
-                    <div className="h-24"></div> {/* Space for signature */}
+                    </label>
                   </div>
-
-                  {/* Teacher Signature */}
-                  <div className="flex-1 text-center font-bold">
-                    <div className="mb-2">&nbsp;</div>{" "}
-                    {/* Alignment vertically */}
-                    <div className="text-green-700 mb-2">គ្រូប្រចាំថ្នាក់</div>
-                    <div className="h-24"></div> {/* Space for signature */}
+                  <div className="flex-1">
+                    <label className="block text-sm font-bold text-slate-700 mb-1 khmer-font">ឈ្មោះសិស្ស <span className="text-rose-500">*</span></label>
                     <input
                       type="text"
-                      defaultValue={classInfo.teacherName}
-                      className="text-red-600 font-bold text-center bg-transparent border-b border-transparent outline-none w-full max-w-[160px]"
+                      required
+                      value={newStudentData.name}
+                      onChange={(e) => setNewStudentData({ ...newStudentData, name: e.target.value })}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all khmer-font"
+                      placeholder="ឧ. សុខ សាន្ត"
                     />
                   </div>
                 </div>
-              </div>
-            </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1 khmer-font">ភេទ <span className="text-rose-500">*</span></label>
+                  <select
+                    value={newStudentData.gender}
+                    onChange={(e) => setNewStudentData({ ...newStudentData, gender: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all khmer-font"
+                  >
+                    <option value="ប្រុស">ប្រុស</option>
+                    <option value="ស្រី">ស្រី</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1 khmer-font">ថ្ងៃខែឆ្នាំកំណើត</label>
+                  <input
+                    type="date"
+                    value={newStudentData.dob}
+                    onChange={(e) => setNewStudentData({ ...newStudentData, dob: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all khmer-font"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1 khmer-font">ឈ្មោះឪពុក</label>
+                    <input
+                      type="text"
+                      value={newStudentData.fatherName}
+                      onChange={(e) => setNewStudentData({ ...newStudentData, fatherName: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all khmer-font text-sm"
+                      placeholder="ឈ្មោះឪពុក"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1 khmer-font">ឈ្មោះម្ដាយ</label>
+                    <input
+                      type="text"
+                      value={newStudentData.motherName}
+                      onChange={(e) => setNewStudentData({ ...newStudentData, motherName: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all khmer-font text-sm"
+                      placeholder="ឈ្មោះម្ដាយ"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1 khmer-font">ភូមិ</label>
+                    <input
+                      type="text"
+                      value={newStudentData.village}
+                      onChange={(e) => setNewStudentData({ ...newStudentData, village: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all khmer-font text-sm"
+                      placeholder="ភូមិ"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1 khmer-font">ឃុំ/សង្កាត់</label>
+                    <input
+                      type="text"
+                      value={newStudentData.district}
+                      onChange={(e) => setNewStudentData({ ...newStudentData, district: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all khmer-font text-sm"
+                      placeholder="ឃុំ/សង្កាត់"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1 khmer-font">ខេត្ត</label>
+                    <input
+                      type="text"
+                      value={newStudentData.province}
+                      onChange={(e) => setNewStudentData({ ...newStudentData, province: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all khmer-font text-sm"
+                      placeholder="ខេត្ត"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-4 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddModal(false)}
+                    className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold khmer-font hover:bg-slate-200 transition-colors"
+                  >
+                    បោះបង់
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold khmer-font hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
+                  >
+                    <Save className="w-5 h-5" />
+                    រក្សាទុក
+                  </button>
+                </div>
+              </form>
+            </motion.div>
           </div>
-        </div>
-      </div>
+        )}
+      </AnimatePresence>
 
       <style>{`
+
         @media print {
           @page { size: landscape; margin: 1cm; }
           body { background: white !important; }

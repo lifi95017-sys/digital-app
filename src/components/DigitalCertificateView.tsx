@@ -7,7 +7,7 @@ import { jsPDF } from 'jspdf';
 
 import kbachBorder from '../assets/images/kbach_border_a4_1785113686250.jpg';
 import logoWatermark from '../assets/images/moeys_logo_watermark_1785113704449.jpg';
-import logoColor from '../assets/images/moeys_logo_color_1785113722843.jpg';
+import logoColor from '../assets/images/Logo MoEYS • High Quality.png';
 
 interface DigitalCertificateViewProps {
   onBack: () => void;

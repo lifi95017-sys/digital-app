@@ -18,6 +18,7 @@ import { db } from '../lib/firebase';
 import { collection, query, onSnapshot, orderBy } from '../lib/firebase';
 import { Student } from '../types';
 import html2canvas from 'html2canvas';
+import logoColor from '../assets/images/Logo MoEYS • High Quality.png';
 
 interface StudentCardViewProps {
   onBack: () => void;
@@ -161,10 +162,10 @@ export default function StudentCardView({ onBack }: StudentCardViewProps) {
                               <div className="relative z-10 p-6 flex flex-col items-center h-full">
                                  {/* Header */}
                                  <div className="flex flex-col items-center space-y-1 mb-8">
-                                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center p-2 mb-1">
-                                       <ShieldCheck className="w-full h-full text-white" />
+                                    <div className="w-12 h-14 bg-white rounded-xl flex items-center justify-center p-1 mb-1 shadow-md">
+                                       <img src={logoColor} alt="MoEYS Logo" className="w-full h-full object-contain pointer-events-none select-none" />
                                     </div>
-                                    <h4 className="text-[10px] font-black text-white khmer-font uppercase tracking-widest text-center">សាលាបឋមសិក្សា...</h4>
+                                    <h4 className="text-[10px] font-black text-white khmer-font uppercase tracking-widest text-center">ក្រសួងអប់រំ យុវជន និងកីឡា</h4>
                                     <p className="text-[7px] font-bold text-indigo-100 uppercase tracking-widest">Digital Education School</p>
                                  </div>
 

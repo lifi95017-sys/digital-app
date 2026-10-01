@@ -1,4 +1,4 @@
-export type Grade = 4 | 5 | 6;
+export type Grade = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 
 export interface Subject {
   id: string;
@@ -53,9 +53,19 @@ export interface LessonPlan {
   };
   references?: string;
   teachingMethods?: string;
+  educationalGame?: string;
   location?: string;
   taughtBy?: string;
   schoolLogo?: string;
+  institutionName?: string;
+  englishInstitutionName?: string;
+  generationCohort?: string;
+  preparedBy?: string;
+  evaluatorTeacher?: string;
+  approach?: string;
+  week?: string;
+  showCoverPage?: boolean;
+  groupMembers?: { no: number; name: string; gender: string; code: string; province: string }[];
 }
 
 export interface LessonPlanPDF {
