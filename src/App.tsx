@@ -136,6 +136,10 @@ export default function App() {
 
   // Firestore Listeners
   useEffect(() => {
+    document.title = "ប្រព័ន្ធគ្រប់គ្រងសិស្ស និងកិច្ចតែងការឌីជីថល Pro";
+  }, []);
+
+  useEffect(() => {
     const unsubStudents = onSnapshot(query(collection(db, 'students'), orderBy('name', 'asc')), (snap) => {
       setStudents(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Student[]);
     });

@@ -2768,5 +2768,217 @@ o សិស្សកត់ត្រាខ្លឹមសារសំខាន់
         }
       }
     }
+  },
+  {
+    "id": "english-g4",
+    "grade": 4,
+    "subject": "ភាសាអង់គ្លេស",
+    "title": "Classroom Objects & Greetings (What is this?)",
+    "plan": {
+      "grade": 4,
+      "subject": "ភាសាអង់គ្លេស",
+      "chapter": "១",
+      "chapterTitle": "Welcome to Class",
+      "lesson": "១",
+      "lessonTitle": "Classroom Objects (pen, pencil, book, ruler)",
+      "week": "សប្តាហ៍ទី1",
+      "duration": 40,
+      "approach": "សិស្សមជ្ឈមណ្ឌល",
+      "methodology": "វិធីសាស្ត្រទំនាក់ទំនងភាសា (Communicative Language Teaching - CLT)",
+      "strategy": "ការគិត-ចាប់គូ-ចែករំលែក (Think-Pair-Share), ការសន្ទនាជាដៃគូ (Pair-Work)",
+      "teachingMethods": "វិធីសាស្ត្រទំនាក់ទំនងភាសា (Communicative Language Teaching - CLT)",
+      "educationalGame": "ល្បែង «Touch & Say Game» (ល្បែងប៉ះវត្ថុ និងនិយាយភាសាអង់គ្លេស)",
+      "references": "English Is Fun Grade 4 (MoEYS Primary Curriculum)",
+      "objectives": {
+        "knowledge": "Identify and name 5 classroom objects in English correctly (pen, pencil, book, ruler, eraser).",
+        "skills": "Ask and answer 'What is this? It is a...' with correct pronunciation and intonation.",
+        "attitude": "Show confidence and enthusiasm in speaking English with peers in the classroom."
+      },
+      "materials": {
+        "teacher": "Flashcards of classroom objects, real objects (realia), worksheet, and audio/visual aids.",
+        "student": "Textbook, notebook, pencil, ruler, eraser, and schoolbag."
+      },
+      "steps": {
+        "step1": {
+          "teacherActivity": "• Class routine: Greetings (Good morning class, how are you today?)\
+• Check attendance and classroom order.",
+          "content": "• Class routine:\
+  - Greetings\
+  - Attendance check\
+  - Classroom setup",
+          "studentActivity": "• Students respond: 'Good morning teacher, I am fine, thank you.'\
+• Students prepare study materials."
+        },
+        "step2": {
+          "teacherActivity": "• Warm-up: Sing the 'Hello Song' together.\
+• Review basic alphabet sounds.",
+          "content": "• Warm-up song & review",
+          "studentActivity": "• Students sing along enthusiastically."
+        },
+        "step3": {
+          "teacherActivity": "o Presentation (Engage & Explain)៖\
+• Show real objects and flashcards (pen, pencil, book, eraser, ruler).\
+• Model pronunciation: 'What is this? It's a pen.'\
+o Practice (Explore & Elaborate)៖\
+• Choral repetition -> individual repetition.\
+• Pair-work: Student A points to an item and asks 'What is this?', Student B answers.",
+          "content": "New Lesson: Classroom Objects\
+• Vocabulary: pen, pencil, book, ruler, eraser\
+• Structure: 'What is this? It's a [noun].'\
+• Pair conversation and pronunciation drills.",
+          "studentActivity": "o Students listen, point, and repeat vocabulary words.\
+o Practice the dialogue with their desk partner.\
+o Role-play asking and answering in front of class."
+        },
+        "step4": {
+          "teacherActivity": "• Educational Game: «Touch & Say Game»\
+• Teacher calls out: 'Touch a book!' - students touch and shout: 'It's a book!'\
+• Reward active students with stars.",
+          "content": "• Reinforcement via game: «Touch & Say Game»\
+• Quick assessment of vocabulary retention.",
+          "studentActivity": "• Students play actively and use target English vocabulary accurately."
+        },
+        "step5": {
+          "teacherActivity": "• Homework: Draw and label 3 classroom objects in notebooks.\
+• Closing: 'Goodbye class, see you tomorrow!'",
+          "content": "• Homework and farewell.",
+          "studentActivity": "• Students copy homework and respond: 'Goodbye teacher!'"
+        }
+      }
+    }
+  },
+  {
+    "id": "english-g5",
+    "grade": 5,
+    "subject": "ភាសាអង់គ្លេស",
+    "title": "Daily Routines & Time (What time do you get up?)",
+    "plan": {
+      "grade": 5,
+      "subject": "ភាសាអង់គ្លេស",
+      "chapter": "២",
+      "chapterTitle": "My Daily Life",
+      "lesson": "៣",
+      "lessonTitle": "Daily Routines (get up, brush teeth, eat breakfast, go to school)",
+      "week": "សប្តាហ៍ទី4",
+      "duration": 40,
+      "approach": "សិស្សមជ្ឈមណ្ឌល",
+      "methodology": "វិធីសាស្ត្រទំនាក់ទំនងភាសា (Communicative Language Teaching - CLT)",
+      "strategy": "ការសម្ភាសន៍ដៃគូ (Partner Interview), ការដើរសម្ភាសន៍ (Mingle Activity)",
+      "teachingMethods": "វិធីសាស្ត្រទំនាក់ទំនងភាសា (Communicative Language Teaching - CLT)",
+      "educationalGame": "ល្បែង «Mime and Guess the Routine» (ល្បែងធ្វើកាយវិការទាយសកម្មភាព)",
+      "references": "English Is Fun Grade 5 (MoEYS Primary Curriculum)",
+      "objectives": {
+        "knowledge": "Recognize and state 5 daily routine verbs and time expressions in English correctly.",
+        "skills": "Ask and answer 'What time do you...?' and tell time on the hour (e.g., at 6 o'clock).",
+        "attitude": "Value time management and actively practice English communication with classmates."
+      },
+      "materials": {
+        "teacher": "Clock model, routine action flashcards, and student survey worksheet.",
+        "student": "Student book, notebook, and pen."
+      },
+      "steps": {
+        "step1": {
+          "teacherActivity": "• Greet students and conduct class attendance routine.\
+• Ask simple questions: 'What day is it today?'",
+          "content": "• Classroom management & routine",
+          "studentActivity": "• Students reply in English: 'Today is Monday.'"
+        },
+        "step2": {
+          "teacherActivity": "• Warm-up: Review numbers 1 to 12 with a quick counting chant.",
+          "content": "• Number review chant",
+          "studentActivity": "• Students chant numbers 1-12 in rhythm."
+        },
+        "step3": {
+          "teacherActivity": "o Presentation: Teach verbs (wake up, eat breakfast, go to school) with pictures.\
+o Show clock: 'What time is it? It's 6 o'clock.'\
+o Sentence pattern: 'I get up at 6 o'clock.'\
+o Practice: Guided drill and partner interview.",
+          "content": "New Lesson: Daily Routines\
+• Phrases: wake up, wash face, have breakfast, go to school\
+• Grammar: Present Simple (I + verb + at + time)\
+• Speaking activity: Asking partners about their morning.",
+          "studentActivity": "o Students repeat action verbs and practice sentences.\
+o Students interview their partner and record answers on worksheet."
+        },
+        "step4": {
+          "teacherActivity": "• Game: «Mime and Guess the Routine»\
+• One student mimes an action; others guess: 'You brush your teeth at 6:30!'\
+• Teacher provides constructive feedback and praise.",
+          "content": "• Game reinforcement: «Mime and Guess»",
+          "studentActivity": "• Students participate enthusiastically and guess routine actions."
+        },
+        "step5": {
+          "teacherActivity": "• Assign homework: Write 3 sentences about your morning routine.\
+• Class closing and farewell.",
+          "content": "• Summary and homework assignment",
+          "studentActivity": "• Write down homework and say goodbye."
+        }
+      }
+    }
+  },
+  {
+    "id": "english-g6",
+    "grade": 6,
+    "subject": "ភាសាអង់គ្លេស",
+    "title": "Jobs & Occupations (What does your father do?)",
+    "plan": {
+      "grade": 6,
+      "subject": "ភាសាអង់គ្លេស",
+      "chapter": "៣",
+      "chapterTitle": "People in My Community",
+      "lesson": "២",
+      "lessonTitle": "Occupations (teacher, doctor, farmer, engineer, police officer)",
+      "week": "សប្តាហ៍ទី5",
+      "duration": 40,
+      "approach": "សិស្សមជ្ឈមណ្ឌល",
+      "methodology": "វិធីសាស្ត្រទំនាក់ទំនងភាសា (Communicative Language Teaching - CLT)",
+      "strategy": "ការពិភាក្សាជាក្រុម (Group Discussion), ការដើរសម្ភាសន៍ (Class Survey)",
+      "teachingMethods": "វិធីសាស្ត្រទំនាក់ទំនងភាសា (Communicative Language Teaching - CLT)",
+      "educationalGame": "ល្បែង «Who am I? Occupation Card Game» (ល្បែងទាយមុខរបរ)",
+      "references": "English Is Fun Grade 6 (MoEYS Primary Curriculum)",
+      "objectives": {
+        "knowledge": "Identify and pronounce names of 6 occupations and their work places accurately.",
+        "skills": "Conduct conversations asking 'What does he/she do?' and 'Where does he/she work?'.",
+        "attitude": "Demonstrate respect for all community occupations and collaborate positively in groups."
+      },
+      "materials": {
+        "teacher": "Occupation flashcards, workplace pictures, audio speaker, survey sheets.",
+        "student": "Notebook, English textbook Grade 6, pens."
+      },
+      "steps": {
+        "step1": {
+          "teacherActivity": "• Greet students and check class administration.",
+          "content": "• Administrative routine",
+          "studentActivity": "• Students reply politely: 'Good afternoon, teacher.'"
+        },
+        "step2": {
+          "teacherActivity": "• Review previous lesson on family members (father, mother, brother, sister).",
+          "content": "• Review family vocabulary",
+          "studentActivity": "• Students recite family member terms."
+        },
+        "step3": {
+          "teacherActivity": "o Presentation: Introduce job vocabulary with pictures (doctor, teacher, farmer, nurse, police).\
+o Structure: 'What does your father do? He is a farmer. He works in a field.'\
+o Group practice: Class survey on parents' jobs.",
+          "content": "Lesson: Jobs and Workplaces\
+• Vocabulary: doctor-hospital, teacher-school, farmer-farm, police-police station\
+• Grammar: Third person singular (He/She works at...)",
+          "studentActivity": "o Repeat pronunciation and analyze third-person grammar.\
+o Survey 3 classmates about family jobs and complete the table."
+        },
+        "step4": {
+          "teacherActivity": "• Game: «Who am I? Occupation Card Game»\
+• A student holds a card to their forehead; classmates give clues until they guess.",
+          "content": "• Speaking evaluation via «Who am I?» game",
+          "studentActivity": "• Give descriptive clues in English and guess occupations."
+        },
+        "step5": {
+          "teacherActivity": "• Homework: Write a short paragraph: 'My dream job in the future'.\
+• Teacher wrap-up and dismissal.",
+          "content": "• Writing homework and wrap-up",
+          "studentActivity": "• Record homework and prepare to dismiss."
+        }
+      }
+    }
   }
 ];

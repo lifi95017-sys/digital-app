@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   ChevronLeft, 
   Sparkles, 
@@ -25,19 +25,22 @@ import {
   FileText,
   ChevronRight,
   Check,
-  Maximize2,
-  Minimize2,
   Calculator,
   FlaskConical,
   Activity,
   Globe,
-  RotateCcw
+  RotateCcw,
+  School,
+  PenLine,
+  X,
+  Printer
 } from 'lucide-react';
 import { LessonPlan, Grade, StepContent } from '../types';
 import TeachingGlossaryModal from './TeachingGlossaryModal';
 import WorksheetModal from './WorksheetModal';
 import SlideGeneratorModal from './SlideGeneratorModal';
 import EducationalGameModal from './EducationalGameModal';
+import SampleLessonPlansModal from './SampleLessonPlansModal';
 import { EducationalGame, PRIMARY_EDUCATIONAL_GAMES, analyzeAndRecommendGame } from '../data/educationalGames';
 import { analyzeLessonPedagogy, LessonPedagogyResult } from '../utils/lessonPedagogy';
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, BorderStyle, WidthType } from 'docx';
@@ -97,130 +100,6 @@ const INITIAL_PLAN: LessonPlan = {
   taughtBy: localStorage.getItem('user_teacher') || 'គ្រូបង្រៀន',
   showCoverPage: false,
 };
-
-export interface SubjectPresetConfig {
-  key: string;
-  label: string;
-  shortLabel: string;
-  icon: React.ComponentType<{ className?: string }>;
-  theme: {
-    name: string;
-    cardBorder: string;
-    cardBg: string;
-    headerIconColor: string;
-    badgeBg: string;
-    activeTab: string;
-    inactiveTab: string;
-    activeGrade: string;
-    inactiveGrade: string;
-    accentDot: string;
-    accentText: string;
-    bannerBg: string;
-  };
-}
-
-export const SUBJECT_PRESET_CONFIGS: SubjectPresetConfig[] = [
-  {
-    key: 'គណិតវិទ្យា',
-    label: 'គណិតវិទ្យា',
-    shortLabel: 'គណិត',
-    icon: Calculator,
-    theme: {
-      name: 'blue',
-      cardBorder: 'border-blue-200/90 shadow-blue-500/5',
-      cardBg: 'bg-gradient-to-br from-blue-50/70 via-indigo-50/30 to-slate-50',
-      headerIconColor: 'text-blue-600',
-      badgeBg: 'bg-blue-100/90 text-blue-800 border-blue-200',
-      activeTab: 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm shadow-blue-500/25 border-transparent font-black',
-      inactiveTab: 'bg-white/90 text-slate-700 hover:text-blue-700 hover:bg-blue-50/60 border-slate-200/80 hover:border-blue-300',
-      activeGrade: 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white ring-2 ring-blue-400/60 shadow-sm shadow-blue-500/20 font-black',
-      inactiveGrade: 'bg-white text-slate-700 hover:text-blue-800 hover:bg-blue-50/70 border-slate-200/80 hover:border-blue-300',
-      accentDot: 'bg-blue-500',
-      accentText: 'text-blue-700',
-      bannerBg: 'bg-blue-50/90 border-blue-200/80',
-    }
-  },
-  {
-    key: 'ភាសាខ្មែរ',
-    label: 'ភាសាខ្មែរ',
-    shortLabel: 'ខ្មែរ',
-    icon: BookOpen,
-    theme: {
-      name: 'amber',
-      cardBorder: 'border-amber-200/90 shadow-amber-500/5',
-      cardBg: 'bg-gradient-to-br from-amber-50/70 via-orange-50/30 to-slate-50',
-      headerIconColor: 'text-amber-600',
-      badgeBg: 'bg-amber-100/90 text-amber-900 border-amber-200',
-      activeTab: 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-sm shadow-amber-500/25 border-transparent font-black',
-      inactiveTab: 'bg-white/90 text-slate-700 hover:text-amber-800 hover:bg-amber-50/60 border-slate-200/80 hover:border-amber-300',
-      activeGrade: 'bg-gradient-to-br from-amber-500 to-orange-500 text-white ring-2 ring-amber-400/60 shadow-sm shadow-amber-500/20 font-black',
-      inactiveGrade: 'bg-white text-slate-700 hover:text-amber-900 hover:bg-amber-50/70 border-slate-200/80 hover:border-amber-300',
-      accentDot: 'bg-amber-500',
-      accentText: 'text-amber-800',
-      bannerBg: 'bg-amber-50/90 border-amber-200/80',
-    }
-  },
-  {
-    key: 'វិទ្យាសាស្ត្រ',
-    label: 'វិទ្យាសាស្ត្រ',
-    shortLabel: 'វិទ្យា',
-    icon: FlaskConical,
-    theme: {
-      name: 'emerald',
-      cardBorder: 'border-emerald-200/90 shadow-emerald-500/5',
-      cardBg: 'bg-gradient-to-br from-emerald-50/70 via-teal-50/30 to-slate-50',
-      headerIconColor: 'text-emerald-600',
-      badgeBg: 'bg-emerald-100/90 text-emerald-900 border-emerald-200',
-      activeTab: 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm shadow-emerald-500/25 border-transparent font-black',
-      inactiveTab: 'bg-white/90 text-slate-700 hover:text-emerald-800 hover:bg-emerald-50/60 border-slate-200/80 hover:border-emerald-300',
-      activeGrade: 'bg-gradient-to-br from-emerald-600 to-teal-600 text-white ring-2 ring-emerald-400/60 shadow-sm shadow-emerald-500/20 font-black',
-      inactiveGrade: 'bg-white text-slate-700 hover:text-emerald-900 hover:bg-emerald-50/70 border-slate-200/80 hover:border-emerald-300',
-      accentDot: 'bg-emerald-500',
-      accentText: 'text-emerald-800',
-      bannerBg: 'bg-emerald-50/90 border-emerald-200/80',
-    }
-  },
-  {
-    key: 'អប់រំកាយ',
-    label: 'អប់រំកាយ',
-    shortLabel: 'កីឡា',
-    icon: Activity,
-    theme: {
-      name: 'rose',
-      cardBorder: 'border-rose-200/90 shadow-rose-500/5',
-      cardBg: 'bg-gradient-to-br from-rose-50/70 via-red-50/30 to-slate-50',
-      headerIconColor: 'text-rose-600',
-      badgeBg: 'bg-rose-100/90 text-rose-900 border-rose-200',
-      activeTab: 'bg-gradient-to-r from-rose-500 via-red-500 to-rose-600 text-white shadow-sm shadow-rose-500/25 border-transparent font-black',
-      inactiveTab: 'bg-white/90 text-slate-700 hover:text-rose-800 hover:bg-rose-50/60 border-slate-200/80 hover:border-rose-300',
-      activeGrade: 'bg-gradient-to-br from-rose-500 to-red-500 text-white ring-2 ring-rose-400/60 shadow-sm shadow-rose-500/20 font-black',
-      inactiveGrade: 'bg-white text-slate-700 hover:text-rose-900 hover:bg-rose-50/70 border-slate-200/80 hover:border-rose-300',
-      accentDot: 'bg-rose-500',
-      accentText: 'text-rose-800',
-      bannerBg: 'bg-rose-50/90 border-rose-200/80',
-    }
-  },
-  {
-    key: 'សិក្សាសង្គម',
-    label: 'សិក្សាសង្គម',
-    shortLabel: 'សង្គម',
-    icon: Globe,
-    theme: {
-      name: 'purple',
-      cardBorder: 'border-purple-200/90 shadow-purple-500/5',
-      cardBg: 'bg-gradient-to-br from-purple-50/70 via-violet-50/30 to-slate-50',
-      headerIconColor: 'text-purple-600',
-      badgeBg: 'bg-purple-100/90 text-purple-900 border-purple-200',
-      activeTab: 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm shadow-purple-500/25 border-transparent font-black',
-      inactiveTab: 'bg-white/90 text-slate-700 hover:text-purple-800 hover:bg-purple-50/60 border-slate-200/80 hover:border-purple-300',
-      activeGrade: 'bg-gradient-to-br from-purple-600 to-indigo-600 text-white ring-2 ring-purple-400/60 shadow-sm shadow-purple-500/20 font-black',
-      inactiveGrade: 'bg-white text-slate-700 hover:text-purple-900 hover:bg-purple-50/70 border-slate-200/80 hover:border-purple-300',
-      accentDot: 'bg-purple-500',
-      accentText: 'text-purple-800',
-      bannerBg: 'bg-purple-50/90 border-purple-200/80',
-    }
-  }
-];
 
 const parseBlocks = (text: string | null | undefined) => {
   if (!text || text === '...') return [];
@@ -330,7 +209,8 @@ export default function LessonPlanForm({ onBack }: LessonPlanFormProps) {
   const [isAnalyzingGame, setIsAnalyzingGame] = useState(false);
   const [gameAnalysisRationale, setGameAnalysisRationale] = useState<string | null>(null);
   const [formTab, setFormTab] = useState<'info' | 'objectives' | 'pedagogy'>('info');
-  const [isFormWide, setIsFormWide] = useState(false);
+  const [showFillInfoModal, setShowFillInfoModal] = useState(false);
+  const [showSamplePlansModal, setShowSamplePlansModal] = useState(false);
 
   const [showObjectivesEdit, setShowObjectivesEdit] = useState(false);
   const [analysisFeedback, setAnalysisFeedback] = useState<{
@@ -710,21 +590,22 @@ export default function LessonPlanForm({ onBack }: LessonPlanFormProps) {
     }
   };
 
-  const handleGenerateAI = async () => {
+  const handleGenerateAI = async (customPlan?: LessonPlan) => {
+    const activePlan = customPlan || plan;
     setIsGenerating(true);
     try {
       const promptText = `អ្នកគឺជា «អ្នកជំនាញវិធីសាស្ត្របង្រៀនបឋមសិក្សា (ថ្នាក់ទី១ ដល់ទី៦)» យោងតាមស្តង់ដារក្រសួងអប់រំ យុវជន និងកីឡា និងវិទ្យាស្ថានគរុកោសល្យរាជធានីភ្នំពេញ (TEC)។
 ភារកិច្ចរបស់អ្នកគឺរៀបចំកិច្ចតែងការបង្រៀនកម្រិតបឋមសិក្សាឱ្យបានត្រឹមត្រូវតាមក្បួនខ្នាតគរុកោសល្យទំនើប៖
 
 ព័ត៌មានអំពីមេរៀន៖
-- មុខវិជ្ជា៖ ${plan.subject}
-- កម្រិតថ្នាក់៖ ថ្នាក់ទី ${plan.grade} (កម្រិតបឋមសិក្សា)
-- មេរៀន/សប្តាហ៍៖ ${plan.week ? `${plan.week} ` : ''}${plan.lessonTitle}
-- ចំណងជើងរង៖ ${plan.subTitle || ''}
-- គោលវិធី៖ ${plan.approach || 'សិស្សមជ្ឈមណ្ឌល'}
-- វិធីសាស្ត្របង្រៀនដែលត្រូវជ្រើសរើស៖ ${plan.teachingMethods || plan.methodology || 'ម៉ូដែលបង្រៀនបែប 5E (5E Instructional Model)'}
-- យុទ្ធវិធីបង្រៀនដែលត្រូវជ្រើសរើស៖ ${plan.strategy || 'ការគិត-ចាប់គូ-ចែករំលែក (Think-Pair-Share), ការអនុវត្តផ្ទាល់ (Hands-on Activity)'}
-- អត្ថបទមេរៀន / ខ្លឹមសារគោល៖ ${plan.lessonContent?.text || ''}
+- មុខវិជ្ជា៖ ${activePlan.subject}
+- កម្រិតថ្នាក់៖ ថ្នាក់ទី ${activePlan.grade} (កម្រិតបឋមសិក្សា)
+- មេរៀន/សប្តាហ៍៖ ${activePlan.week ? `${activePlan.week} ` : ''}${activePlan.lessonTitle}
+- ចំណងជើងរង៖ ${activePlan.subTitle || ''}
+- គោលវិធី៖ ${activePlan.approach || 'សិស្សមជ្ឈមណ្ឌល'}
+- វិធីសាស្ត្របង្រៀនដែលត្រូវជ្រើសរើស៖ ${activePlan.teachingMethods || activePlan.methodology || 'ម៉ូដែលបង្រៀនបែប 5E (5E Instructional Model)'}
+- យុទ្ធវិធីបង្រៀនដែលត្រូវជ្រើសរើស៖ ${activePlan.strategy || 'ការគិត-ចាប់គូ-ចែករំលែក (Think-Pair-Share), ការអនុវត្តផ្ទាល់ (Hands-on Activity)'}
+- អត្ថបទមេរៀន / ខ្លឹមសារគោល៖ ${activePlan.lessonContent?.text || ''}
 
 =======================================================
 ចំណាំសំខាន់បំផុតទី១ (គរុកោសល្យតាមកម្រិតថ្នាក់ទី១ ដល់ទី៦)៖
@@ -734,7 +615,7 @@ export default function LessonPlanForm({ onBack }: LessonPlanFormProps) {
 
 =======================================================
 ចំណាំសំខាន់បំផុតទី២ (វត្ថុបំណងមេរៀន និង Bloom's Taxonomy) - STRICT CONSTRAINTS:
-សូមបង្កើតវត្ថុបំណងទាំង ៣ (វិជ្ជាសម្បទា, បំណិនសម្បទា, ចរិយាសម្បទា) ដោយផ្អែកលើអត្ថបទមេរៀន និងកម្រិតថ្នាក់ទី ${plan.grade}៖
+សូមបង្កើតវត្ថុបំណងទាំង ៣ (វិជ្ជាសម្បទា, បំណិនសម្បទា, ចរិយាសម្បទា) ដោយផ្អែកលើអត្ថបទមេរៀន និងកម្រិតថ្នាក់ទី ${activePlan.grade}៖
 - វត្ថុបំណងនីមួយៗ ត្រូវតែសរសេរតាមរូបមន្ត៖ [កិរិយាសព្ទសកម្មភាព (Action Verb)] + [ខ្លឹមសារ/លក្ខខណ្ឌ] + [កម្រិតរំពឹងទុក/ស្ដង់ដារ]។
 - សម្រាប់ "វិជ្ជាសម្បទា" និង "បំណិនសម្បទា" ត្រូវតែផ្ដើមប្រយោគដោយ "Action Verb" ផ្ទាល់ (ឧទាហរណ៍៖ ពន្យល់, រាប់, រៀបរាប់, បង្ហាញ, គណនា, ប្រៀបធៀប...) ដោយមិនត្រូវមានពាក្យ "សិស្ស" នៅពីមុខឡើយ។
   + វិជ្ជាសម្បទា គំរូ៖ "ពន្យល់បានអំពី... តាមរយៈការពិភាក្សា និងការសង្កេតរូបភាព បានត្រឹមត្រូវ។"
@@ -743,7 +624,7 @@ export default function LessonPlanForm({ onBack }: LessonPlanFormProps) {
 
 =======================================================
 ចំណាំសំខាន់បំផុតទី៣ (វិធីសាស្ត្របង្រៀន និងយុទ្ធវិធីក្នុងដំណើរការបង្រៀន ៥ ជំហាន)៖
-សូមរៀបចំសកម្មភាពគ្រូ ខ្លឹមសារ និងសកម្មភាពសិស្ស ឱ្យត្រូវតាមវិធីសាស្ត្រដែលបានជ្រើសរើស (${plan.teachingMethods || 'ម៉ូដែល 5E'})៖
+សូមរៀបចំសកម្មភាពគ្រូ ខ្លឹមសារ និងសកម្មភាពសិស្ស ឱ្យត្រូវតាមវិធីសាស្ត្រដែលបានជ្រើសរើស (${activePlan.teachingMethods || 'ម៉ូដែល 5E'})៖
 
 ប្រសិនបើជា "ម៉ូដែលបង្រៀនបែប 5E" (ដូចគំរូ TEC)៖
 - ជំហានទី១ (៣នាទី)៖ ត្រួតពិនិត្យ និងរដ្ឋបាលថ្នាក់ (អវត្តមាន សណ្តាប់ធ្នាប់ អនាម័យ)
@@ -769,8 +650,8 @@ export default function LessonPlanForm({ onBack }: LessonPlanFormProps) {
 =======================================================
 ចំណាំសំខាន់បំផុតទី៥ (ល្បែងសិក្សាសម្រាប់ជំហានទី៤ ស្របតាមវិធីសាស្ត្រ និងយុទ្ធវិធីបង្រៀន)៖
 ផ្នែកកិច្ចតែងការបង្រៀនថ្នាក់ទី១ដល់ទី៦៖ ត្រូវដាក់បន្ថែម «ល្បែងសិក្សា» សម្រាប់ដាក់ក្នុងកិច្ចតែងការបង្រៀននៅជំហានទី៤ (ពង្រឹងពុទ្ធិ/ការវាយតម្លៃ)។
-អ្នកត្រូវតែវិភាគវិធីសាស្ត្របង្រៀន (${plan.teachingMethods || plan.methodology || 'ម៉ូដែល 5E'}) និងយុទ្ធវិធីបង្រៀន (${plan.strategy || 'ការអនុវត្តផ្ទាល់ / ការគិត-ចាប់គូ-ចែករំលែក'}) ព្រមទាំងមុខវិជ្ជា (${plan.subject}) និងកម្រិតថ្នាក់ (ថ្នាក់ទី ${plan.grade}) ដើម្បីជ្រើសរើសល្បែងសិក្សាដែលត្រូវគ្នា និងឆ្លើយតបនឹងវត្ថុបំណងមេរៀន (ឧទាហរណ៍៖ ល្បែង «រង្វង់សំណាង ឬ កង់វិលសំណួរ», «បោះបាល់បន្ត ឬ បាល់តន្ត្រី», «ផ្គូផ្គងរូបភាពនិងប័ណ្ណពាក្យ», «ប្រណាំងសរសេរលើក្តារខៀន», «ផ្កាយសំណាង ឬ ប្រអប់អាថ៌កំបាំង», «ប៊ិងហ្គោពាក្យគន្លឹះ», «ដើរមើលវិចិត្រសាល (Gallery Walk Challenge)», «សំបុកកញ្ចាញ់ចេក», «កាតភ្លើងស្តុប»...)។
-${plan.educationalGame ? `- ល្បែងដែលគ្រូបានកំណត់ជាមុន៖ ${plan.educationalGame}` : ''}
+អ្នកត្រូវតែវិភាគវិធីសាស្ត្របង្រៀន (${activePlan.teachingMethods || activePlan.methodology || 'ម៉ូដែល 5E'}) និងយុទ្ធវិធីបង្រៀន (${activePlan.strategy || 'ការអនុវត្តផ្ទាល់ / ការគិត-ចាប់គូ-ចែករំលែក'}) ព្រមទាំងមុខវិជ្ជា (${activePlan.subject}) និងកម្រិតថ្នាក់ (ថ្នាក់ទី ${activePlan.grade}) ដើម្បីជ្រើសរើសល្បែងសិក្សាដែលត្រូវគ្នា និងឆ្លើយតបនឹងវត្ថុបំណងមេរៀន (ឧទាហរណ៍៖ ល្បែង «រង្វង់សំណាង ឬ កង់វិលសំណួរ», «បោះបាល់បន្ត ឬ បាល់តន្ត្រី», «ផ្គូផ្គងរូបភាពនិងប័ណ្ណពាក្យ», «ប្រណាំងសរសេរលើក្តារខៀន», «ផ្កាយសំណាង ឬ ប្រអប់អាថ៌កំបាំង», «ប៊ិងហ្គោពាក្យគន្លឹះ», «ដើរមើលវិចិត្រសាល (Gallery Walk Challenge)», «សំបុកកញ្ចាញ់ចេក», «កាតភ្លើងស្តុប»...)។
+${activePlan.educationalGame ? `- ល្បែងដែលគ្រូបានកំណត់ជាមុន៖ ${activePlan.educationalGame}` : ''}
 
 សូមប្រគល់ត្រឡប់៖
 1. field "educationalGame": "ល្បែង «[ឈ្មោះល្បែង]»"
@@ -790,9 +671,9 @@ ${plan.educationalGame ? `- ល្បែងដែលគ្រូបានកំ�
 សូមត្រលប់មកវិញតែជាទម្រង់ JSON object string ប៉ុណ្ណោះ ដោយមិនមាន markdown formatting (NO \`\`\`json) ហើយស្របតាមទម្រង់ដូចខាងក្រោម៖
 {
   "educationalGame": "ល្បែង «[ឈ្មោះល្បែង]»",
-  "chapter": "${plan.chapter || '១'}",
-  "chapterTitle": "${plan.chapterTitle || 'ចំណងជើងជំពូក'}",
-  "lesson": "${plan.lesson || '១'}",
+  "chapter": "${activePlan.chapter || '១'}",
+  "chapterTitle": "${activePlan.chapterTitle || 'ចំណងជើងជំពូក'}",
+  "lesson": "${activePlan.lesson || '១'}",
   "objectives": {
     "knowledge": "ពន្យល់បានអំពី... តាមរយៈ... បានត្រឹមត្រូវ។",
     "skills": "ប្រើប្រាស់... ដើម្បីដោះស្រាយ... បានច្បាស់លាស់។",
@@ -920,13 +801,13 @@ ${plan.educationalGame ? `- ល្បែងដែលគ្រូបានកំ�
 
       } catch (parseError) {
         console.warn("AI parse issue, applying pedagogical fallback:", parseError);
-        const titleText = plan.lessonTitle || 'មេរៀន';
+        const titleText = activePlan.lessonTitle || 'មេរៀន';
         const fallback = analyzeLessonPedagogy(
-          plan.grade,
-          plan.subject,
+          activePlan.grade,
+          activePlan.subject,
           titleText,
-          plan.chapterTitle,
-          plan.lessonContent?.text
+          activePlan.chapterTitle,
+          activePlan.lessonContent?.text
         );
         setPlan(prev => ({
           ...prev,
@@ -1092,64 +973,40 @@ ${plan.educationalGame ? `- ល្បែងដែលគ្រូបានកំ�
     }
   };
 
-  return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
-        <div>
-          <button 
-            onClick={onBack}
-            className="flex items-center gap-2 text-slate-500 hover:text-emerald-600 font-bold mb-2 transition-colors"
-          >
-            <ChevronLeft className="w-5 h-5" /> ត្រឡប់ក្រោយ
-          </button>
-          <h2 className="text-3xl font-black text-slate-800 font-kantumruy mb-2 leading-relaxed">បង្កើតកិច្ចតែងការបង្រៀន</h2>
-          <p className="text-slate-500 font-khmer mt-2">ប្រើប្រាស់ AI ដើម្បីជំនួយក្នុងការរៀបចំកិច្ចតែងការបានយ៉ាងរហ័ស</p>
-        </div>
-      </header>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 xl:grid-cols-12 gap-7 items-start">
-        {/* Form Column */}
-        <div className={`${isFormWide ? 'lg:col-span-7 xl:col-span-7' : 'lg:col-span-5 xl:col-span-5'} space-y-4 print:hidden transition-all duration-300`}>
-          <div className="bg-white p-5 sm:p-6 rounded-[2rem] shadow-xl shadow-slate-100/70 border border-slate-200/80 flex flex-col min-h-[720px] max-h-[calc(100vh-100px)] sticky top-4">
-             {/* Form Card Header */}
-             <div className="border-b border-slate-100 pb-3 mb-3 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold shadow-xs">
-                    <BookOpen className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-black text-slate-800 font-kantumruy leading-tight">
-                      រៀបចំកិច្ចតែងការ
-                    </h3>
-                    <p className="text-[11.5px] text-slate-500 font-khmer mt-0.5">
-                      ថ្នាក់ទី {plan.grade} • {plan.subject}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsFormWide(!isFormWide)}
-                    className="p-1.5 text-slate-500 hover:text-emerald-700 bg-slate-100 hover:bg-emerald-50 rounded-xl transition-all hidden lg:flex items-center gap-1.5 text-xs font-khmer font-bold cursor-pointer border border-slate-200/70"
-                    title={isFormWide ? "បង្រួមទំហំធម្មតា" : "ពង្រីកផ្ទាំងទិន្នន័យឱ្យធំស្រួលមើល"}
-                  >
-                    {isFormWide ? (
-                      <>
-                        <Minimize2 className="w-3.5 h-3.5" />
-                        <span className="text-[10.5px]">បង្រួម</span>
-                      </>
-                    ) : (
-                      <>
-                        <Maximize2 className="w-3.5 h-3.5" />
-                        <span className="text-[10.5px]">ពង្រីកផ្ទាំង</span>
-                      </>
-                    )}
-                  </button>
-                  <span className="text-xs bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-black font-khmer border border-emerald-200/80 shadow-2xs">
-                    ថ្នាក់ទី {plan.grade}
-                  </span>
-                </div>
-             </div>
+  const renderFormCard = () => (
+    <div className="bg-white p-4 sm:p-6 rounded-3xl shadow-2xl border border-slate-200/80 max-h-[88vh] flex flex-col">
+       {/* Form Card Header */}
+       <div className="border-b border-slate-100 pb-3 mb-3 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-bold shadow-sm shadow-emerald-500/20">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-slate-800 font-kantumruy leading-tight flex items-center gap-1.5">
+                ផ្ទាំងបំពេញព័ត៌មាន
+                <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full font-khmer">
+                  កិច្ចតែងការ
+                </span>
+              </h3>
+              <p className="text-[11.5px] text-slate-500 font-khmer mt-0.5">
+                បំពេញព័ត៌មានមេរៀនដើម្បីបង្កើតកិច្ចតែងការ (ថ្នាក់ទី {plan.grade} • {plan.subject})
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-black font-khmer border border-emerald-200/80 shadow-2xs">
+              ថ្នាក់ទី {plan.grade}
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowFillInfoModal(false)}
+              className="w-8 h-8 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-all cursor-pointer ml-1"
+              title="បិទ"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+       </div>
 
              {/* Tab Navigation */}
              <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100/90 rounded-2xl mb-3 shrink-0 font-khmer">
@@ -1162,8 +1019,8 @@ ${plan.educationalGame ? `- ល្បែងដែលគ្រូបានកំ�
                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                  }`}
                >
-                 <BookOpen className="w-3.5 h-3.5" />
-                 <span>១. ទូទៅ</span>
+                 <FileText className="w-3.5 h-3.5" />
+                 <span>១. បំពេញព័ត៌មាន</span>
                </button>
                <button
                  type="button"
@@ -1193,191 +1050,10 @@ ${plan.educationalGame ? `- ល្បែងដែលគ្រូបានកំ�
 
              {/* Tab Content Area (Scrollable) */}
              <div className="space-y-3.5 overflow-y-auto flex-grow pr-1.5 no-scrollbar mb-3">
-                {/* TAB 1: GENERAL INFO & PRESETS */}
-                {formTab === 'info' && (
-                  <div className="space-y-3.5 animate-in fade-in duration-200">
-                    {/* Grade 1-6 Standards Presets Selector with 5 Subjects */}
-                    {(() => {
-                      const currentSubName = plan.subject.includes('គណិត')
-                        ? 'គណិតវិទ្យា'
-                        : plan.subject.includes('ភាសា')
-                        ? 'ភាសាខ្មែរ'
-                        : plan.subject.includes('វិទ្យា')
-                        ? 'វិទ្យាសាស្ត្រ'
-                        : plan.subject.includes('អប់រំកាយ')
-                        ? 'អប់រំកាយ'
-                        : plan.subject.includes('សង្គម')
-                        ? 'សិក្សាសង្គម'
-                        : selectedSubjectTab;
-
-                      const curConfig = SUBJECT_PRESET_CONFIGS.find(s => s.key === currentSubName) || SUBJECT_PRESET_CONFIGS[0];
-
-                      return (
-                        <div className={`border rounded-2xl p-3.5 shadow-xs transition-all duration-300 ${curConfig.theme.cardBg} ${curConfig.theme.cardBorder}`}>
-                          {/* Header with Title and Model Pill */}
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <div className={`p-1.5 rounded-xl bg-white shadow-2xs border ${curConfig.theme.cardBorder}`}>
-                                <Sparkles className={`w-4 h-4 ${curConfig.theme.headerIconColor}`} />
-                              </div>
-                              <div>
-                                <h3 className="text-xs font-black text-slate-800 font-khmer flex items-center gap-1.5">
-                                  <span>គំរូកិច្ចតែងការបឋមសិក្សា (ថ្នាក់ទី ១ - ៦)</span>
-                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${curConfig.theme.badgeBg}`}>
-                                    ៥ មុខវិជ្ជា
-                                  </span>
-                                </h3>
-                                <p className="text-[10.5px] text-slate-500 font-khmer">
-                                  ជ្រើសរើសមុខវិជ្ជា និងកម្រិតថ្នាក់ ដើម្បីផ្ទុកកិច្ចតែងការគំរូស្តង់ដារក្រសួង
-                                </p>
-                              </div>
-                            </div>
-                            <span className={`text-[10.5px] font-bold px-2.5 py-1 rounded-full font-khmer border ${curConfig.theme.badgeBg} shrink-0 hidden sm:inline-block`}>
-                              {plan.teachingMethods?.includes('5E') ? 'ម៉ូដែល 5E' : plan.teachingMethods?.includes('IBL') ? 'ម៉ូដែល IBL' : 'សិស្សមជ្ឈមណ្ឌល'}
-                            </span>
-                          </div>
-
-                          {/* 1. Subjects Pill Tabs */}
-                          <div className="mb-3">
-                            <div className="flex items-center justify-between mb-1.5">
-                              <span className="text-[11px] font-bold text-slate-600 font-khmer">
-                                ១. ជ្រើសរើសមុខវិជ្ជា៖
-                              </span>
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full font-khmer border ${curConfig.theme.badgeBg}`}>
-                                {curConfig.label}
-                              </span>
-                            </div>
-
-                            <div className="grid grid-cols-5 gap-1.5">
-                              {SUBJECT_PRESET_CONFIGS.map((sub) => {
-                                const isCurSub = currentSubName === sub.key;
-                                const IconComponent = sub.icon;
-                                return (
-                                  <button
-                                    key={sub.key}
-                                    type="button"
-                                    onClick={() => {
-                                      setSelectedSubjectTab(sub.key);
-                                      const match = GRADE_LESSON_PRESETS.find(p => p.grade === plan.grade && p.subject === sub.key);
-                                      if (match) {
-                                        handleSelectGradePreset(match.id);
-                                      }
-                                    }}
-                                    className={`group py-2 px-1 rounded-xl text-xs font-khmer font-bold transition-all cursor-pointer flex flex-col items-center justify-center border shadow-2xs ${
-                                      isCurSub
-                                        ? sub.theme.activeTab
-                                        : sub.theme.inactiveTab
-                                    }`}
-                                    title={sub.label}
-                                  >
-                                    <div className={`p-1 rounded-lg transition-transform group-hover:scale-110 mb-1 ${
-                                      isCurSub ? 'bg-white/20' : 'bg-slate-100 group-hover:bg-white'
-                                    }`}>
-                                      <IconComponent className={`w-3.5 h-3.5 ${isCurSub ? 'text-white' : sub.theme.headerIconColor}`} />
-                                    </div>
-                                    <span className="text-[11px] leading-tight truncate w-full text-center">
-                                      <span className="hidden md:inline">{sub.label}</span>
-                                      <span className="md:hidden">{sub.shortLabel}</span>
-                                    </span>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-
-                          {/* 2. Grade 1-6 Selection Buttons */}
-                          <div className="mb-3">
-                            <div className="flex items-center justify-between mb-1.5">
-                              <span className="text-[11px] font-bold text-slate-600 font-khmer">
-                                ២. ជ្រើសរើសកម្រិតថ្នាក់ (១ ដល់ ៦)៖
-                              </span>
-                              <span className="text-[10px] text-slate-500 font-khmer">
-                                ថ្នាក់បច្ចុប្បន្ន៖ <strong className={curConfig.theme.accentText}>ថ្នាក់ទី {plan.grade}</strong>
-                              </span>
-                            </div>
-
-                            <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
-                              {([1, 2, 3, 4, 5, 6] as Grade[]).map((g) => {
-                                const preset = GRADE_LESSON_PRESETS.find(p => p.grade === g && p.subject === currentSubName)
-                                  || GRADE_LESSON_PRESETS.find(p => p.grade === g);
-                                const isActive = plan.grade === g;
-
-                                return (
-                                  <button
-                                    key={g}
-                                    type="button"
-                                    onClick={() => preset && handleSelectGradePreset(preset.id)}
-                                    className={`p-2 rounded-xl text-xs font-khmer flex flex-col items-start justify-between border transition-all cursor-pointer shadow-2xs relative group min-h-[58px] ${
-                                      isActive
-                                        ? curConfig.theme.activeGrade
-                                        : curConfig.theme.inactiveGrade
-                                    }`}
-                                    title={preset ? `${preset.subject}: ${preset.title}` : `ថ្នាក់ទី ${g}`}
-                                  >
-                                    <div className="flex items-center justify-between w-full">
-                                      <span className="font-black text-xs">ថ្នាក់ទី {g}</span>
-                                      {isActive ? (
-                                        <span className="w-2 h-2 rounded-full bg-white shadow-xs"></span>
-                                      ) : (
-                                        <span className="text-[9px] text-slate-400 group-hover:text-slate-600 font-bold">G{g}</span>
-                                      )}
-                                    </div>
-                                    <div className={`text-[10px] mt-1 text-left w-full truncate leading-tight font-medium ${
-                                      isActive ? 'text-white/95' : 'text-slate-500 group-hover:text-slate-700'
-                                    }`}>
-                                      {preset?.title ? preset.title.replace(/\(ជំពូកទី.*\)/, '').trim() : `មេរៀន ${g}`}
-                                    </div>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-
-                          {/* 3. Selected Preset Summary Card */}
-                          <div className={`p-2.5 rounded-xl border ${curConfig.theme.bannerBg} flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition-all`}>
-                            <div className="flex items-start gap-2.5 min-w-0">
-                              <div className={`p-2 rounded-xl bg-white shadow-2xs border ${curConfig.theme.cardBorder} shrink-0 mt-0.5`}>
-                                <curConfig.icon className={`w-4 h-4 ${curConfig.theme.headerIconColor}`} />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md font-khmer border ${curConfig.theme.badgeBg}`}>
-                                    {curConfig.label} • ថ្នាក់ទី {plan.grade}
-                                  </span>
-                                  <span className="text-[10px] font-bold text-slate-600 bg-white/90 px-2 py-0.5 rounded-md font-khmer border border-slate-200/80">
-                                    ជំពូក {plan.chapter || '១'} • {plan.duration} នាទី
-                                  </span>
-                                </div>
-                                <h4 className="text-xs font-black text-slate-900 font-khmer truncate mt-1">
-                                  {plan.lessonTitle || 'កិច្ចតែងការគំរូ'}
-                                </h4>
-                                <p className="text-[10.5px] text-slate-600 font-khmer truncate mt-0.5">
-                                  {plan.teachingMethods?.includes('5E') ? '✨ ម៉ូដែលបង្រៀន 5E' : plan.teachingMethods?.includes('IBL') ? '✨ ម៉ូដែលរុករក IBL' : '✨ វិធីសាស្ត្រសិស្សមជ្ឈមណ្ឌល'} — គំរូស្តង់ដារក្រសួងអប់រំ យុវជន និងកីឡា
-                                </p>
-                              </div>
-                            </div>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const activePreset = GRADE_LESSON_PRESETS.find(p => p.grade === plan.grade && p.subject === currentSubName)
-                                  || GRADE_LESSON_PRESETS.find(p => p.grade === plan.grade);
-                                if (activePreset) {
-                                  handleSelectGradePreset(activePreset.id);
-                                }
-                              }}
-                              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold font-khmer text-slate-700 bg-white hover:bg-slate-50 hover:text-slate-900 rounded-xl border border-slate-200/90 shadow-2xs transition-all cursor-pointer shrink-0 self-end sm:self-center active:scale-95"
-                              title="ផ្ទុកទិន្នន័យកិច្ចតែងការគំរូស្តង់ដារឡើងវិញ"
-                            >
-                              <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
-                              <span>ផ្ទុកគំរូឡើងវិញ</span>
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })()}
-
-                    {/* Date Input with Auto-Fill Button */}
+                 {/* TAB 1: GENERAL INFO & PRESETS */}
+                 {formTab === 'info' && (
+                   <div className="space-y-3.5 animate-in fade-in duration-200">
+                     {/* Date Input with Auto-Fill Button */}
                     <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-3 space-y-1.5">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5 font-khmer">
@@ -1530,17 +1206,55 @@ ${plan.educationalGame ? `- ល្បែងដែលគ្រូបានកំ�
                       </div>
                     </div>
 
-                    <div>
-                      <label className="text-xs font-bold text-slate-700 mb-1 flex items-center gap-1 font-khmer">
-                        <User className="w-3.5 h-3.5 text-indigo-600" />
-                        <span>បង្រៀនដោយ (គ្រូបង្រៀន)</span>
-                      </label>
-                      <input 
-                        type="text" 
-                        value={plan.taughtBy || ''} 
-                        onChange={e => setPlan({...plan, taughtBy: e.target.value})} 
-                        placeholder="ឈ្មោះគ្រូបង្រៀន..." 
-                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-khmer text-xs font-bold text-indigo-800 transition-all shadow-2xs" 
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 mb-1 flex items-center gap-1 font-khmer">
+                          <User className="w-3.5 h-3.5 text-indigo-600" />
+                          <span>បង្រៀនដោយ (គ្រូបង្រៀន)</span>
+                        </label>
+                        <input 
+                          type="text" 
+                          value={plan.taughtBy || ''} 
+                          onChange={e => setPlan({...plan, taughtBy: e.target.value})} 
+                          placeholder="ឈ្មោះគ្រូបង្រៀន..." 
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-khmer text-xs font-bold text-indigo-800 transition-all shadow-2xs" 
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 mb-1 flex items-center gap-1 font-khmer">
+                          <School className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>ឈ្មោះសាលារៀន</span>
+                        </label>
+                        <input 
+                          type="text" 
+                          value={localStorage.getItem('user_school') || 'សាលាបឋមសិក្សាព្រែកទាល់'} 
+                          onChange={e => {
+                            localStorage.setItem('user_school', e.target.value);
+                            setPlan({...plan});
+                          }} 
+                          placeholder="ឈ្មោះសាលារៀន..." 
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-khmer text-xs text-slate-800 transition-all shadow-2xs" 
+                        />
+                      </div>
+                    </div>
+
+                    {/* Lesson Content / Summary Input */}
+                    <div className="bg-emerald-50/40 border border-emerald-200/80 rounded-2xl p-3 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5 font-khmer">
+                          <FileText className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>ខ្លឹមសារមេរៀនសង្ខេប / ចំណុចសំខាន់ៗ</span>
+                        </label>
+                        <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold font-khmer">
+                          សម្រាប់ AI បង្កើតកិច្ចតែងការ
+                        </span>
+                      </div>
+                      <textarea 
+                        value={plan.lessonContent?.text || ''} 
+                        onChange={e => setPlan({...plan, lessonContent: {...plan.lessonContent, text: e.target.value}})} 
+                        placeholder="បញ្ចូលខ្លឹមសារសង្ខេប លំហាត់ ឬចំណុចសំខាន់ៗនៃមេរៀនដែលត្រូវបង្រៀន..." 
+                        rows={2}
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-khmer text-xs text-slate-800 resize-none transition-all shadow-2xs leading-relaxed" 
                       />
                     </div>
                   </div>
@@ -1917,22 +1631,43 @@ ${plan.educationalGame ? `- ល្បែងដែលគ្រូបានកំ�
                   )}
                 </div>
 
-                {/* Primary AI Generate Button */}
-                <button 
-                  onClick={handleGenerateAI}
-                  disabled={isGenerating || !plan.lessonContent?.text}
-                  className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl font-black font-khmer shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2.5 transition-all active:scale-98 disabled:opacity-50 disabled:grayscale cursor-pointer text-sm"
-                >
-                  {isGenerating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                  <span>{isGenerating ? 'កំពុងបង្កើតកិច្ចតែងការ...' : 'AI បង្កើតកិច្ចតែងការ'}</span>
-                </button>
+                <div className="flex items-center justify-between gap-2 pt-1 font-khmer">
+                  <button
+                    type="button"
+                    onClick={() => setShowFillInfoModal(false)}
+                    className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-all cursor-pointer"
+                  >
+                    បិទ
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowFillInfoModal(false)}
+                      className="px-4 py-2.5 bg-white border border-emerald-300 text-emerald-700 hover:bg-emerald-50 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>អនុវត្តព័ត៌មាន</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowFillInfoModal(false);
+                        handleGenerateAI();
+                      }}
+                      disabled={isGenerating}
+                      className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-black text-xs shadow-md shadow-emerald-500/25 flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                    >
+                      {isGenerating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-amber-300" />}
+                      <span>{isGenerating ? 'កំពុងបង្កើត...' : 'បង្កើតកិច្ចតែងការ (AI)'}</span>
+                    </button>
+                  </div>
+                </div>
              </div>
           </div>
-        </div>
+  );
 
-        {/* Content Column */}
-        <div className={`${isFormWide ? 'lg:col-span-5 xl:col-span-5' : 'lg:col-span-7 xl:col-span-7'} print:col-span-full bg-slate-100/80 p-3 sm:p-6 md:p-8 rounded-[2.5rem] flex justify-center print:bg-transparent print:p-0 transition-all duration-300`}>
-           <div id="lesson-plan-preview" className="bg-white px-[1.5cm] py-[1.5cm] rounded flex flex-col shadow-xl min-h-[297mm] w-full max-w-[210mm] print:shadow-none print:rounded-none print:p-0 print:w-[210mm] mx-auto">
+  const renderPreviewContent = () => (
+    <div id="lesson-plan-preview" className="bg-white px-[1.5cm] py-[1.5cm] rounded flex flex-col shadow-xl min-h-[297mm] w-full max-w-[210mm] print:shadow-none print:rounded-none print:p-0 print:w-[210mm] mx-auto">
               <div className="flex justify-between items-start mb-8">
                  {/* Left: Ministry Logo & School Name */}
                  <div className="flex flex-col items-center justify-center text-center">
@@ -2110,8 +1845,73 @@ ${plan.educationalGame ? `- ល្បែងដែលគ្រូបានកំ�
                  </button>
               </div>
            </div>
+  );
+
+  return (
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="print:hidden space-y-3">
+        <button 
+          onClick={onBack}
+          className="flex items-center gap-2 text-slate-500 hover:text-emerald-600 font-bold transition-colors cursor-pointer text-sm font-khmer"
+        >
+          <ChevronLeft className="w-5 h-5" /> ត្រឡប់ក្រោយ
+        </button>
+
+        {/* Toolbar Banner matching user uploaded image */}
+        <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-4 sm:p-5 shadow-sm shadow-slate-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 max-w-[210mm] w-full mx-auto">
+          <div className="flex items-center gap-3 font-khmer">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#d1fae5]/80 text-[#059669] flex items-center justify-center shrink-0 border border-emerald-200/60 shadow-2xs">
+              <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-black text-slate-900 font-kantumruy leading-tight">
+                កិច្ចតែងការបង្រៀន
+              </h3>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 self-end md:self-center">
+            <button
+              type="button"
+              onClick={() => setShowFillInfoModal(true)}
+              className="px-5 sm:px-6 py-2.5 bg-[#00875a] hover:bg-[#007048] text-white rounded-full font-bold font-khmer text-xs sm:text-sm flex items-center gap-2 shadow-xs transition-all active:scale-95 cursor-pointer"
+            >
+              <PenLine className="w-4 h-4 text-emerald-200 stroke-[2.2]" />
+              <span>បំពេញព័ត៌មាន</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowSamplePlansModal(true)}
+              className="px-5 sm:px-6 py-2.5 bg-[#f59e0b] hover:bg-[#d97706] text-white rounded-full font-bold font-khmer text-xs sm:text-sm flex items-center gap-2 shadow-xs transition-all active:scale-95 cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4 text-amber-100 stroke-[2.2]" />
+              <span>គំរូកិច្ចតែងការបង្រៀន</span>
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Lesson Plan A4 Preview */}
+      <div className="bg-slate-100/80 p-3 sm:p-6 md:p-8 rounded-[2.5rem] flex justify-center print:bg-transparent print:p-0 transition-all duration-300 w-full">
+        {renderPreviewContent()}
+      </div>
+
+      {/* Modal Dialog (ផ្ទាំងបំពេញព័ត៌មានកិច្ចតែងការ) */}
+      <AnimatePresence>
+        {showFillInfoModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/60 backdrop-blur-xs overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl overflow-hidden shadow-2xl my-auto"
+            >
+              {renderFormCard()}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <TeachingGlossaryModal 
         isOpen={showGlossary} 
@@ -2141,6 +1941,41 @@ ${plan.educationalGame ? `- ល្បែងដែលគ្រូបានកំ�
         onSelectGame={handleSelectGame}
         onAIAnalyzeGame={handleAIGenerateGame}
         isAnalyzingAI={isAnalyzingGame}
+      />
+      <SampleLessonPlansModal
+        isOpen={showSamplePlansModal}
+        onClose={() => setShowSamplePlansModal(false)}
+        currentGrade={plan.grade}
+        currentSubject={plan.subject}
+        onSelectPreset={(presetId) => {
+          handleSelectGradePreset(presetId);
+        }}
+        onSelectAndGenerateAI={(presetId) => {
+          handleSelectGradePreset(presetId);
+          const sel = GRADE_LESSON_PRESETS.find(p => p.id === presetId);
+          if (sel?.plan) {
+            handleGenerateAI({ ...plan, ...sel.plan });
+          } else {
+            handleGenerateAI();
+          }
+        }}
+        onGenerateCustomAI={(grade, subject, topic) => {
+          setPlan(prev => ({
+            ...prev,
+            grade,
+            subject,
+            lessonTitle: topic,
+            lessonContent: { text: topic }
+          }));
+          handleGenerateAI({
+            ...plan,
+            grade,
+            subject,
+            lessonTitle: topic,
+            lessonContent: { text: topic }
+          });
+        }}
+        isGenerating={isGenerating}
       />
     </div>
   );
