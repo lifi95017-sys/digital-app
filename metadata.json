@@ -2,5 +2,7 @@
   "name": "ប្រព័ន្ធគ្រប់គ្រងសិស្ស និងកិច្ចតែងការឌីជីថល Pro",
   "description": "កម្មវិធីគ្រប់គ្រងសិស្សកម្រិតខ្ពស់ រួមមានការវិភាគពិន្ទុ បង្កើតកាតសិស្ស និងកិច្ចតែងការបង្រៀនឌីជីថលសម្រាប់បឋមសិក្សា។",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
